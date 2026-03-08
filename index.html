@@ -3,420 +3,211 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>手势交互塔罗牌 - 参考版</title>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+    <title>Tarot Ritual - Kinetic Gesture</title>
     <style>
-        /* CSS 样式升级 - 替换旧样式，添加参考样式的牌背和布局 */
-        body {
-            margin: 0; overflow: hidden; background-color: #0c0d21;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            color: #d8dee9; user-select: none;
-        }
-        #video-container {
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            z-index: -1; opacity: 0.12; transform: scaleX(-1); /* 镜像翻转 */
-        }
-        video { width: 100%; height: 100%; object-fit: cover; }
-        
-        #ui-layer {
-            position: absolute; top: 20px; left: 0; width: 100%; text-align: center; z-index: 10;
-            pointer-events: none;
-        }
-        #status-text { font-size: 20px; font-weight: bold; color: #f9ed69; text-shadow: 0 0 10px rgba(249,237,105,0.8); transition: opacity 0.5s;}
-
-        #deck-container {
-            position: absolute; top: 25%; left: 0; width: 100%; height: 250px;
-            display: flex; align-items: center; justify-content: flex-start; /* 改为水平排列 */
-            overflow: visible; /* 允许卡牌滚出视口 */
-        }
-
-        /* --- 3D 卡牌样式 --- */
-        .card {
-            width: 120px; height: 200px; position: absolute;
-            perspective: 1200px; /* 赋予 3D 空间感 */
-            transition: transform 0.2s, box-shadow 0.3s;
-            margin-right: 10px; /* 卡牌间距 */
-            will-change: transform; /* 性能优化 */
-        }
-        .card.grabbed { transition: none; z-index: 100; box-shadow: 0 0 40px #f9ed69;}
-        .card.placed { transition: all 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94); z-index: 5;}
-
-        .card-inner {
-            position: relative; width: 100%; height: 100%; text-align: center;
-            transition: transform 0.8s; transform-style: preserve-3d; /* 保持 3D 子元素 */
-            border-radius: 12px;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.6);
-        }
-        
-        /* 翻转触发类 */
-        .card.flipped .card-inner { transform: rotateY(180deg); }
-
-        .card-front, .card-back {
-            position: absolute; width: 100%; height: 100%; backface-visibility: hidden; /* 隐藏背面 */
-            border-radius: 12px; display: flex; align-items: center; justify-content: center;
-            flex-direction: column; padding: 12px; box-sizing: border-box;
-            border: 2px solid #533483;
-        }
-        
-        /* 牌背 - 复杂的 SVG 图案，替换旧的准星 */
-        .card-back {
-            background: linear-gradient(135deg, #1a1b3a, #0c0d21);
-            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 100 166"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="%23d4af37"/><stop offset="1" stop-color="%23533483"/></linearGradient></defs><rect x="0" y="0" width="100" height="166" fill="%231a1b3a" stroke="%23533483" stroke-width="2"/><circle cx="50" cy="83" r="30" fill="none" stroke="%23d4af37" stroke-width="1.5" stroke-dasharray="2 4"/><path d="M50 33 L50 133 M0 83 L100 83" fill="none" stroke="%23d4af37" stroke-width="1"/><path d="M50 83 L80 113 L50 143 L20 113 Z" fill="%231a1b3a" stroke="%23533483" stroke-width="1.5"/><circle cx="50" cy="83" r="15" fill="%230c0d21"/><circle cx="50" cy="83" r="10" fill="none" stroke="%23f9ed69" stroke-width="2"/><path d="M47 80 L50 77 L53 80 L50 83 L47 86 L50 89 L53 86 Z" fill="%23f9ed69"/><circle cx="30" cy="53" r="5" fill="%23f9ed69"/><circle cx="70" cy="113" r="5" fill="%23f9ed69"/></svg>');
-            background-size: cover;
-        }
-        
-        /* 牌面占位符 */
-        .card-front {
-            background: #fdf5e6; color: #1a1a2e; border: 2px solid #d4af37;
-            transform: rotateY(180deg); /* 初始翻转 180 度 */
-        }
-        .card-front h3 { font-size: 16px; margin: 0 0 10px 0; color: #8b0000; }
-        .card-front img { width: 80%; border-radius: 6px; margin-bottom: 5px; }
-
-        /* --- 槽位与解牌区域 --- */
-        #slots-container {
-            position: absolute; bottom: 180px; left: 0; width: 100%;
-            display: flex; justify-content: center; gap: 40px;
-        }
-        .slot {
-            width: 120px; height: 200px; border: 2px dashed #533483; border-radius: 12px;
-        }
-
-        #reading-area {
-            position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
-            width: 85%; max-width: 650px; min-height: 140px;
-            background: rgba(12, 13, 33, 0.88); border: 1px solid #d4af37; border-radius: 12px;
-            padding: 22px; box-sizing: border-box; display: none;
-            font-size: 17px; line-height: 1.7; text-shadow: 1px 1px 3px black;
-        }
-        .reading-title { color: #f9ed69; font-weight: bold; margin-bottom: 12px; font-size: 19px; text-transform: uppercase;}
-
-        #hand-cursor {
-            position: fixed; width: 34px; height: 34px; border-radius: 50%;
-            background-color: rgba(249, 237, 105, 0.8); box-shadow: 0 0 18px rgba(249, 237, 105, 1);
-            pointer-events: none; z-index: 999; top: -50px; left: -50px;
-            transform: translate(-50%, -50%); transition: background-color 0.2s, transform 0.2s;
-        }
-        #hand-cursor.fist { background-color: #f9ed69; transform: translate(-50%, -50%) scale(0.65); box-shadow: 0 0 30px rgba(249, 237, 105, 1);}
-        #hand-cursor.index { background-color: #d4af37; transform: translate(-50%, -50%) scale(0.85); border-radius: 6px; box-shadow: 0 0 20px rgba(212, 175, 55, 1);}
-
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&display=swap');
+        body { margin:0; padding:0; background:radial-gradient(circle at center,#2a0033,#000); color:#ffd700;
+               font-family:'Noto Serif SC',serif; overflow:hidden; text-align:center; height:100vh; display:flex; flex-direction:column; }
+        h1 { font-size:2.8rem; margin:15px 0; text-shadow:0 0 30px #ffd700, 0 0 60px #8a2be2; }
+        button { padding:18px 50px; font-size:1.4rem; background:linear-gradient(#4b0082,#2a0033); color:#ffd700;
+                 border:4px solid #ffd700; border-radius:50px; cursor:pointer; box-shadow:0 0 40px #ffd700; transition:all 0.4s; }
+        button:hover { transform:scale(1.15); box-shadow:0 0 70px #ffd700; }
+        #ritual { display:none; flex-direction:column; align-items:center; flex:1; }
+        #deck { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; max-width:95%; margin:20px 0; }
+        .card { width:110px; height:165px; border:5px solid #ffd700; border-radius:15px; background:#111; cursor:grab;
+                transition:all 0.5s; box-shadow:0 15px 40px rgba(255,215,0,0.4); overflow:hidden; }
+        .card img { width:100%; height:100%; object-fit:cover; transition:transform 0.6s; }
+        .card.flipped img { transform:rotateY(180deg); }
+        #camera { position:fixed; top:20px; right:20px; width:220px; border:3px solid #ffd700; border-radius:15px; display:none; }
+        .particle { position:absolute; width:6px; height:6px; background:#ffd700; border-radius:50%; pointer-events:none; animation:spark 1.5s forwards; }
+        @keyframes spark { to { opacity:0; transform:translateY(-100px); } }
     </style>
 </head>
 <body>
-
-    <div id="video-container"><video id="webcam" autoplay playsinline></video></div>
-
-    <div id="ui-layer">
-        <h1 style="margin-top: 10px; font-size: 26px; color: #f9ed69;">手势塔罗牌占卜</h1>
-        <div id="status-text">正在加载 AI 模型...</div>
+    <h1>✦ Tarot Ritual - Kinetic Gesture ✦</h1>
+    <p>塔罗仅为当下指引<br>命由天定　运在人为　<strong>仅供娱乐</strong></p>
+    
+    <button onclick="startRitual()">启动魔法阵</button>
+    
+    <div id="ritual">
+        <p>鼠标拖动洗牌　点击卡牌翻开　松开抽牌<br>
+        <button onclick="toggleCamera()" style="font-size:1rem;padding:8px 20px;">📷 开启摄像头手势模式（预留）</button></p>
+        
+        <video id="camera" autoplay playsinline></video>
+        
+        <div id="deck"></div>
+        
+        <button onclick="drawCards()" style="margin-top:20px;">抽取命运三张牌</button>
+        
+        <div id="result" class="result"></div>
     </div>
-
-    <div id="deck-container"></div>
-
-    <div id="slots-container">
-        <div class="slot" id="slot-1"></div>
-        <div class="slot" id="slot-2"></div>
-        <div class="slot" id="slot-3"></div>
-    </div>
-
-    <div id="reading-area">
-        <div class="reading-title" id="reading-title">正在解读命运之签...</div>
-        <div id="reading-text"></div>
-    </div>
-
-    <div id="hand-cursor"></div>
 
     <script>
-        // --- 模拟塔罗牌数据库 (22张大阿卡纳) ---
-        const tarotDatabase = [
-            { id: 0, name: "愚者 (The Fool)", meaning: "代表无限的可能性、自发性和全新的旅程。现在是放下包袱，凭直觉大胆向前迈出一步的时候了。" },
-            { id: 1, name: "魔术师 (The Magician)", meaning: "代表创造力、意志力和天赋。你已经拥有了实现目标所需的一切资源，请将你的想法化为现实。" },
-            { id: 2, name: "女祭司 (The High Priestess)", meaning: "代表潜意识、直觉和神秘。答案不在外界，请向内寻求，倾听你内心深处的声音。" },
-            { id: 3, name: "女皇 (The Empress)", meaning: "代表丰饶、创造力和感性。请拥抱自然和你的情感，培育生命中的美好。" },
-            { id: 4, name: "皇帝 (The Emperor)", meaning: "代表权威、结构和稳定。你拥有建立秩序和实现目标的坚强意志，请发挥你的领导力。" },
-            { id: 5, name: "教皇 (The Hierophant)", meaning: "代表传统、信仰和群体。你可能在寻求导师的指引，或在寻求更高层次的精神追求。" },
-            { id: 6, name: "恋人 (The Lovers)", meaning: "代表选择、和谐和伴侣。你可能在做出一个重要的选择，或在处理一段关系中的承诺。" },
-            { id: 7, name: "战车 (The Chariot)", meaning: "代表意志力、控制和胜利。通过坚强的意志和自我约束，你可以克服一切障碍。" },
-            { id: 8, name: "力量 (Strength)", meaning: "代表勇气、韧性和耐心。真正的力量来自于内在，请以温柔的方式克服挑战。" },
-            { id: 9, name: "隐士 (The Hermit)", meaning: "代表自省、孤独和内在的指引。你需要暂时远离人群的喧嚣，给自己留出思考的空间。" },
-            { id: 10, name: "命运之轮 (The Wheel)", meaning: "代表命运的转折、不可预测性和周期的变化。好运即将降临，请顺应改变的洪流。" },
-            { id: 11, name: "正义 (Justice)", meaning: "代表公平、真理和责任。请做出平衡和道德的选择，结果将取决于你的行动。" },
-            { id: 12, name: "倒吊人 (The Hanged Man)", meaning: "代表牺牲、新视角和等待。接受牺牲可以带来更高层次的洞见，请换一个角度看问题。" },
-            { id: 13, name: "死亡 (Death)", meaning: "代表结束、转变和新的开始。旧的东西必须结束，新的东西才能开始，请接受这个自然的过程。" },
-            { id: 14, name: "节制 (Temperance)", meaning: "代表平衡、和谐和耐心。找到对立面之间的中间路径，请以温和的方式实现平衡。" },
-            { id: 15, name: "恶魔 (The Devil)", meaning: "代表束缚、物质主义和诱惑。你可能被自己的物质欲望或消极想法束缚，请寻求真正的自由。" },
-            { id: 16, name: "高塔 (The Tower)", meaning: "代表突如其来的变化、混乱和觉醒。虽然变化可能是破坏性的，但它也带来了新的洞见和自由。" },
-            { id: 17, name: "星星 (The Star)", meaning: "代表希望、灵感和内心的平静。在经历了黑暗之后，你将迎来治愈和充满光芒的未来。" },
-            { id: 18, name: "月亮 (The Moon)", meaning: "代表潜意识、幻想和直觉. 请倾听你的直觉,揭示隐藏在表面之下的真理,避免陷入幻觉。" },
-            { id: 19, name: "太阳 (The Sun)", meaning: "代表活力、清晰和快乐。请庆祝你的成就在光明中，你将迎来明确的未来。" },
-            { id: 20, name: "审判 (Judgement)", meaning: "代表觉醒、责任和决策。请做出重要的选择，评估你的过去，并拥抱新的旅程。" },
-            { id: 21, name: "世界 (The World)", meaning: "代表完成、成就和整体。你已经完成了你的旅程，请庆祝你的整体和完整性。" }
+        // ==================== 完整78张牌（已按你文件名映射） ====================
+        const tarotDeck = [
+            // 大阿尔卡纳（00-TheFool.jpg 开始）
+            {filename:"00-TheFool.jpg", name:"0 愚者", upright:"新开始、冒险、纯真", reversed:"鲁莽、犹豫"},
+            {filename:"01-TheMagician.jpg", name:"1 魔术师", upright:"创造、技能、意志", reversed:"欺骗、拖延"},
+            {filename:"02-TheHighPriestess.jpg", name:"2 女祭司", upright:"直觉、神秘、内在", reversed:"秘密、封闭"},
+            {filename:"03-TheEmpress.jpg", name:"3 皇后", upright:"丰盛、母性、创造", reversed:"依赖、阻塞"},
+            {filename:"04-TheEmperor.jpg", name:"4 皇帝", upright:"权威、结构、稳定", reversed:"专制、混乱"},
+            {filename:"05-TheHierophant.jpg", name:"5 教皇", upright:"传统、指导、精神", reversed:"叛逆、教条"},
+            {filename:"06-TheLovers.jpg", name:"6 恋人", upright:"爱情、选择、和谐", reversed:"不和、错误"},
+            {filename:"07-TheChariot.jpg", name:"7 战车", upright:"胜利、决心、方向", reversed:"失控、迷失"},
+            {filename:"08-Strength.jpg", name:"8 力量", upright:"勇气、耐心、内力", reversed:"软弱、恐惧"},
+            {filename:"09-TheHermit.jpg", name:"9 隐士", upright:"内省、智慧、孤独", reversed:"孤立、拒绝"},
+            {filename:"10-WheelOfFortune.jpg", name:"10 命运之轮", upright:"转变、周期、机遇", reversed:"阻力、坏运"},
+            {filename:"11-Justice.jpg", name:"11 正义", upright:"公平、真相、因果", reversed:"不公、逃避"},
+            {filename:"12-TheHangedMan.jpg", name:"12 倒吊人", upright:"牺牲、新视角、放下", reversed:"停滞、抗拒"},
+            {filename:"13-Death.jpg", name:"13 死亡", upright:"结束、转变、重生", reversed:"恐惧、停滞"},
+            {filename:"14-Temperance.jpg", name:"14 节制", upright:"平衡、调和", reversed:"极端、失衡"},
+            {filename:"15-TheDevil.jpg", name:"15 恶魔", upright:"束缚、欲望", reversed:"释放、自由"},
+            {filename:"16-TheTower.jpg", name:"16 塔", upright:"突发、觉醒", reversed:"灾难、恐惧"},
+            {filename:"17-TheStar.jpg", name:"17 星星", upright:"希望、灵感", reversed:"失望"},
+            {filename:"18-TheMoon.jpg", name:"18 月亮", upright:"幻觉、直觉", reversed:"困惑、欺骗"},
+            {filename:"19-TheSun.jpg", name:"19 太阳", upright:"成功、快乐", reversed:"暂时低谷"},
+            {filename:"20-Judgement.jpg", name:"20 审判", upright:"觉醒、复活", reversed:"自我怀疑"},
+            {filename:"21-TheWorld.jpg", name:"21 世界", upright:"圆满、成就", reversed:"未完成"},
+            
+            // 小阿尔卡纳（Wands 权杖 / Cups 圣杯 / Swords 宝剑 / Pentacles 星币）
+            // 权杖 Wands
+            {filename:"Wands01.jpg", name:"权杖王牌", upright:"新灵感、激情", reversed:"延迟"},
+            {filename:"Wands02.jpg", name:"权杖二", upright:"规划、选择", reversed:"恐惧未知"},
+            {filename:"Wands03.jpg", name:"权杖三", upright:"展望、进步", reversed:"延迟"},
+            {filename:"Wands04.jpg", name:"权杖四", upright:"庆祝、稳定", reversed:"不稳定"},
+            {filename:"Wands05.jpg", name:"权杖五", upright:"竞争、冲突", reversed:"和解"},
+            {filename:"Wands06.jpg", name:"权杖六", upright:"胜利、认可", reversed:"自大"},
+            {filename:"Wands07.jpg", name:"权杖七", upright:"防守、毅力", reversed:"退缩"},
+            {filename:"Wands08.jpg", name:"权杖八", upright:"快速行动", reversed:"拖延"},
+            {filename:"Wands09.jpg", name:"权杖九", upright:"韧性、警惕", reversed:"偏执"},
+            {filename:"Wands10.jpg", name:"权杖十", upright:"责任、负担", reversed:"释放"},
+            {filename:"Wands11.jpg", name:"权杖侍卫", upright:"热情讯息", reversed:"嫉妒"},
+            {filename:"Wands12.jpg", name:"权杖骑士", upright:"行动、冒险", reversed:"冲动"},
+            {filename:"Wands13.jpg", name:"权杖皇后", upright:"自信、魅力", reversed:"自私"},
+            {filename:"Wands14.jpg", name:"权杖国王", upright:"领导、远见", reversed:"专横"},
+            
+            // 圣杯 Cups
+            {filename:"Cups01.jpg", name:"圣杯王牌", upright:"新情感、爱", reversed:"堵塞"},
+            {filename:"Cups02.jpg", name:"圣杯二", upright:"伙伴、和谐", reversed:"失衡"},
+            {filename:"Cups03.jpg", name:"圣杯三", upright:"庆祝、友谊", reversed:"过度"},
+            {filename:"Cups04.jpg", name:"圣杯四", upright:"内省、冷漠", reversed:"接受"},
+            {filename:"Cups05.jpg", name:"圣杯五", upright:"悲伤、遗憾", reversed:"希望"},
+            {filename:"Cups06.jpg", name:"圣杯六", upright:"回忆、纯真", reversed:"执着过去"},
+            {filename:"Cups07.jpg", name:"圣杯七", upright:"幻想、选择", reversed:"幻灭"},
+            {filename:"Cups08.jpg", name:"圣杯八", upright:"离开、追寻", reversed:"逃避"},
+            {filename:"Cups09.jpg", name:"圣杯九", upright:"满足、愿望实现", reversed:"自满"},
+            {filename:"Cups10.jpg", name:"圣杯十", upright:"家庭幸福", reversed:"家庭纠纷"},
+            {filename:"Cups11.jpg", name:"圣杯侍卫", upright:"浪漫讯息", reversed:"情绪化"},
+            {filename:"Cups12.jpg", name:"圣杯骑士", upright:"浪漫、邀请", reversed:"欺骗"},
+            {filename:"Cups13.jpg", name:"圣杯皇后", upright:"直觉、同情", reversed:"依赖"},
+            {filename:"Cups14.jpg", name:"圣杯国王", upright:"情感掌控", reversed:"操纵"},
+            
+            // 宝剑 Swords
+            {filename:"Swords01.jpg", name:"宝剑王牌", upright:"真相、突破", reversed:"混乱"},
+            {filename:"Swords02.jpg", name:"宝剑二", upright:"抉择、平衡", reversed:"僵局"},
+            {filename:"Swords03.jpg", name:"宝剑三", upright:"心碎、悲伤", reversed:"原谅"},
+            {filename:"Swords04.jpg", name:"宝剑四", upright:"休息、恢复", reversed:"倦怠"},
+            {filename:"Swords05.jpg", name:"宝剑五", upright:"冲突、胜利", reversed:"宽恕"},
+            {filename:"Swords06.jpg", name:"宝剑六", upright:"过渡、离开", reversed:"拖延"},
+            {filename:"Swords07.jpg", name:"宝剑七", upright:"策略、偷窃", reversed:"良心发现"},
+            {filename:"Swords08.jpg", name:"宝剑八", upright:"束缚、恐惧", reversed:"释放"},
+            {filename:"Swords09.jpg", name:"宝剑九", upright:"焦虑、噩梦", reversed:"希望"},
+            {filename:"Swords10.jpg", name:"宝剑十", upright:"结束、谷底", reversed:"重生"},
+            {filename:"Swords11.jpg", name:"宝剑侍卫", upright:"警觉、观察", reversed:"多疑"},
+            {filename:"Swords12.jpg", name:"宝剑骑士", upright:"快速行动", reversed:"鲁莽"},
+            {filename:"Swords13.jpg", name:"宝剑皇后", upright:"清晰、独立", reversed:"冷酷"},
+            {filename:"Swords14.jpg", name:"宝剑国王", upright:"理性、权威", reversed:"专制"},
+            
+            // 星币 Pentacles
+            {filename:"Pentacles01.jpg", name:"星币王牌", upright:"新机会、财富", reversed:"错失"},
+            {filename:"Pentacles02.jpg", name:"星币二", upright:"平衡、多任务", reversed:"失衡"},
+            {filename:"Pentacles03.jpg", name:"星币三", upright:"合作、技能", reversed:"懒惰"},
+            {filename:"Pentacles04.jpg", name:"星币四", upright:"稳定、安全", reversed:"贪婪"},
+            {filename:"Pentacles05.jpg", name:"星币五", upright:"艰难、孤立", reversed:"帮助"},
+            {filename:"Pentacles06.jpg", name:"星币六", upright:"慷慨、给予", reversed:"自私"},
+            {filename:"Pentacles07.jpg", name:"星币七", upright:"评估、耐心", reversed:"焦虑"},
+            {filename:"Pentacles08.jpg", name:"星币八", upright:"专注、工艺", reversed:"完美主义"},
+            {filename:"Pentacles09.jpg", name:"星币九", upright:"独立、奢华", reversed:"孤独"},
+            {filename:"Pentacles10.jpg", name:"星币十", upright:"传承、财富", reversed:"家族纠纷"},
+            {filename:"Pentacles11.jpg", name:"星币侍卫", upright:"学习、机会", reversed:"拖延"},
+            {filename:"Pentacles12.jpg", name:"星币骑士", upright:"可靠、努力", reversed:"固执"},
+            {filename:"Pentacles13.jpg", name:"星币皇后", upright:"滋养、丰盛", reversed:"依赖"},
+            {filename:"Pentacles14.jpg", name:"星币国王", upright:"成功、纪律", reversed:"贪婪"}
         ];
 
-        const videoElement = document.getElementById('webcam');
-        const deckContainer = document.getElementById('deck-container');
-        const cursor = document.getElementById('hand-cursor');
-        const statusText = document.getElementById('status-text');
-        const readingArea = document.getElementById('reading-area');
-        const readingTitle = document.getElementById('reading-title');
-        const readingText = document.getElementById('reading-text');
-        
-        const TOTAL_CARDS = 22;
-        const CLONED_CARDS = 44; // 生成两倍卡牌以实现无限滚动布局
-        let cards = [];
-        let scrollOffset = 0;
-        let targetScrollSpeed = 0;
-        let currentScrollSpeed = 0;
-        let isScrollingControlled = false; // 是否正被手势位置控制
-        
-        const CARD_WIDTH = 120;
-        const CARD_GAP = 10;
-        const TOTAL_DECK_WIDTH = CLONED_CARDS * (CARD_WIDTH + CARD_GAP);
-        const MAX_SCROLL_SPEED = 18; // px/frame
-        
-        let handX = window.innerWidth / 2, handY = window.innerHeight / 2;
-        let currentGesture = 'open';
-        let grabbedCard = null;
-        let drawnCardsCount = 0;
-        const MAX_DRAW = 3;
-        let drawnCardsElements = [];
+        let deck = [];
+        let selectedCards = [];
+        let cameraStream = null;
 
-        // 初始化卡牌 DOM (44张，两倍克隆)
-        for (let i = 0; i < CLONED_CARDS; i++) {
-            let card = document.createElement('div');
-            card.className = 'card';
-            card.dataset.index = i % TOTAL_CARDS; // 原始卡牌索引
-            card.innerHTML = `
-                <div class="card-inner">
-                    <div class="card-back"></div>
-                    <div class="card-front">
-                        <h3 class="card-name"></h3>
-                    </div>
-                </div>
-            `;
-            deckContainer.appendChild(card);
-            cards.push(card);
+        function getCardURL(filename) {
+            return `cards/${filename}`;
         }
 
-        // --- 动画循环 (核心布局逻辑：实现水平无限滚动轮播) ---
-        function renderLoop() {
-            if (drawnCardsCount < MAX_DRAW) {
-                // 1. 速度控制和惯性
-                if (isScrollingControlled) {
-                    currentScrollSpeed = currentScrollSpeed + (targetScrollSpeed - currentScrollSpeed) * 0.12; // 平滑移动到目标速度
-                } else {
-                    currentScrollSpeed *= 0.94; // 惯性减速
-                }
-                
-                // 2. 更新滚动抵消量
-                scrollOffset += currentScrollSpeed;
-                
-                // 3. 模运算实现无限滚动
-                // 确保结果始终为正
-                let modOffset = (scrollOffset % TOTAL_DECK_WIDTH + TOTAL_DECK_WIDTH) % TOTAL_DECK_WIDTH;
-                
-                // 4. 定位卡牌
-                cards.forEach((card, index) => {
-                    if (card === grabbedCard || card.classList.contains('placed')) return;
-                    
-                    let baseX = index * (CARD_WIDTH + CARD_GAP);
-                    let currentX = (baseX - modOffset + TOTAL_DECK_WIDTH) % TOTAL_DECK_WIDTH;
-                    let finalX = currentX;
-                    
-                    card.style.transform = `translateX(${finalX}px)`;
-                    
-                    // 可选：根据到中心的距离设置 z-index
-                    let viewportCenter = window.innerWidth / 2;
-                    let cardCenter = finalX + CARD_WIDTH / 2;
-                    let distToCenter = Math.abs(cardCenter - viewportCenter);
-                    let zFactor = Math.floor(50 - distToCenter / 20);
-                    card.style.zIndex = zFactor;
-                });
-            }
-
-            // 被抓取的牌跟随手部
-            if (grabbedCard) {
-                grabbedCard.style.left = `${handX - CARD_WIDTH / 2}px`;
-                grabbedCard.style.top = `${handY - CARD_WIDTH * 1.6 / 2}px`;
-                grabbedCard.style.transform = `rotate(0deg)`;
-            }
-            requestAnimationFrame(renderLoop);
-        }
-        renderLoop();
-
-        // --- MediaPipe 识别 ---
-        function detectGesture(landmarks) {
-            const isFingerCurled = (tip, mcp) => landmarks[tip].y > landmarks[mcp].y;
-            const indexCurled = isFingerCurled(8, 5);
-            const middleCurled = isFingerCurled(12, 9);
-            const ringCurled = isFingerCurled(16, 13);
-            const pinkyCurled = isFingerCurled(20, 17);
-            const curledCount = [indexCurled, middleCurled, ringCurled, pinkyCurled].filter(Boolean).length;
-
-            if (curledCount >= 3) return 'fist';
-            else if (!indexCurled && middleCurled && ringCurled && pinkyCurled) return 'index';
-            else return 'open';
+        function createCardElement(card) {
+            const el = document.createElement('div');
+            el.className = 'card back';
+            el.innerHTML = `<img src="${getCardURL('CardBacks.jpg')}" alt="背面">`;
+            el.onclick = () => flipCard(el, card);
+            return el;
         }
 
-        function onResults(results) {
-            if (drawnCardsCount >= MAX_DRAW) return;
-            if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
-                const landmarks = results.multiHandLandmarks[0];
-                const rawX = (landmarks[5].x + landmarks[0].x) / 2;
-                const normalizedHandX = 1 - rawX; // 镜像后，0-1从左到右
-                const rawY = (landmarks[5].y + landmarks[0].y) / 2;
-                
-                handX = handX + (normalizedHandX * window.innerWidth - handX) * 0.35;
-                handY = handY + (rawY * window.innerHeight - handY) * 0.35;
-                cursor.style.left = `${handX}px`;
-                cursor.style.top = `${handY}px`;
-
-                const newGesture = detectGesture(landmarks);
-                
-                // 核心逻辑：手势控制滑动方向和速度
-                if (newGesture === 'open' && !grabbedCard) {
-                    isScrollingControlled = true;
-                    // 手越靠近右边，速度越快（正）；靠近左边，速度负。
-                    targetScrollSpeed = (normalizedHandX - 0.5) * MAX_SCROLL_SPEED;
-                    // 设置一个死区（中间区域），手在中间时停止
-                    if (Math.abs(normalizedHandX - 0.5) < 0.08) targetScrollSpeed = 0;
-                } else {
-                    // 食指手势，明确停止滑动
-                    if (newGesture === 'index') {
-                        isScrollingControlled = true;
-                        targetScrollSpeed = 0; // 明确停止
-                    } else {
-                         // 握拳抓取，由它自己惯性减速
-                         isScrollingControlled = false;
-                    }
-                }
-
-                if (newGesture !== currentGesture) {
-                    currentGesture = newGesture;
-                    handleGestureChange();
-                }
-            }
-        }
-
-        function handleGestureChange() {
-            cursor.className = currentGesture;
-            if (currentGesture === 'fist' && !grabbedCard) {
-                let closestCard = null, minDistance = Infinity;
-                cards.forEach(card => {
-                    if (card.classList.contains('placed')) return;
-                    const rect = card.getBoundingClientRect();
-                    const dist = Math.hypot((rect.left + rect.width / 2) - handX, (rect.top + rect.height / 2) - handY);
-                    if (dist < 150 && dist < minDistance) {
-                        minDistance = dist; closestCard = card;
-                    }
-                });
-                if (closestCard) {
-                    grabbedCard = closestCard;
-                    grabbedCard.classList.add('grabbed');
-                    const rect = grabbedCard.getBoundingClientRect();
-                    grabbedCard.style.left = `${rect.left}px`;
-                    grabbedCard.style.top = `${rect.top}px`;
-                }
-            }
-
-            if (currentGesture === 'open' && grabbedCard) {
-                drawnCardsCount++;
-                const targetSlot = document.getElementById(`slot-${drawnCardsCount}`);
-                const slotRect = targetSlot.getBoundingClientRect();
-                
-                grabbedCard.classList.remove('grabbed');
-                grabbedCard.classList.add('placed');
-                grabbedCard.style.left = `${slotRect.left}px`;
-                grabbedCard.style.top = `${slotRect.top}px`;
-                grabbedCard.style.transform = 'rotate(0deg)';
-                
-                drawnCardsElements.push(grabbedCard);
-                grabbedCard = null;
-
-                if (drawnCardsCount >= MAX_DRAW) {
-                    statusText.innerText = "抽取完毕，解读命运之时已到...";
-                    cursor.style.display = 'none'; // 隐藏光标
-                    setTimeout(startReading, 1800); // 稍长一点等待
-                }
-            }
-        }
-
-        // --- 打字机效果函数 ---
-        function typeWriter(text, element, speed = 50) {
-            return new Promise(resolve => {
-                element.innerHTML = "";
-                let i = 0;
-                function type() {
-                    if (i < text.length) {
-                        element.innerHTML += text.charAt(i);
-                        i++;
-                        setTimeout(type, speed);
-                    } else {
-                        resolve(); // 打字完成后解除 Promise 阻塞
-                    }
-                }
-                type();
-            });
-        }
-
-        // --- 核心解牌逻辑 (自动翻牌 + 渐显) ---
-        async function startReading() {
-            readingArea.style.display = 'block';
-            statusText.style.opacity = '0';
+        function startRitual() {
+            document.querySelector('button').style.display = 'none';
+            document.getElementById('ritual').style.display = 'flex';
             
-            // 随机选3张牌
-            let shuffledDb = [...tarotDatabase].sort(() => 0.5 - Math.random());
-            let selectedData = shuffledDb.slice(0, 3);
-            const positions = ["【过去】", "【现在】", "【未来】"];
-
-            for (let i = 0; i < 3; i++) {
-                let cardEl = drawnCardsElements[i];
-                let data = selectedData[i];
-
-                // 1. 将数据写入卡牌正面 DOM
-                let frontName = cardEl.querySelector('.card-name');
-                frontName.innerText = data.name;
-                
-                // 如果有真实的图片，可以在这里动态添加 img 标签
-                // let frontEl = cardEl.querySelector('.card-front');
-                // frontEl.innerHTML += `<img src="/path/to/your/images/${data.id}.jpg" alt="${data.name}">`; // data.id 是 0-21
-
-                // 2. 触发 CSS 3D 翻转
-                cardEl.classList.add('flipped');
-
-                // 3. 更新解牌区标题
-                readingTitle.innerText = `${positions[i]} - ${data.name}`;
-                
-                // 4. 等待打字机效果完成
-                await typeWriter(data.meaning, readingText, 65);
-
-                // 5. 读完一张牌后，停顿 2 秒
-                if (i < 2) {
-                    await new Promise(r => setTimeout(r, 2200));
-                }
-            }
-
-            // 结尾收尾
-            setTimeout(() => {
-                readingTitle.innerText = "命运占卜已完成";
-                readingText.innerHTML += "<br><br><i>刷新页面可重新抽取。</i>";
-            }, 1200);
+            deck = [...tarotDeck].sort(() => Math.random() - 0.5);
+            const container = document.getElementById('deck');
+            container.innerHTML = '';
+            deck.forEach(card => container.appendChild(createCardElement(card)));
+            
+            // 魔法粒子
+            setInterval(createParticle, 300);
         }
 
-        // --- 初始化摄像头 ---
-        const hands = new Hands({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`});
-        hands.setOptions({ maxNumHands: 1, modelComplexity: 1, minDetectionConfidence: 0.72, minTrackingConfidence: 0.72 });
-        hands.onResults(onResults);
+        function flipCard(el, card) {
+            if (el.classList.contains('flipped')) return;
+            el.classList.add('flipped');
+            setTimeout(() => {
+                const isUpright = Math.random() > 0.5;
+                el.innerHTML = `<img src="${getCardURL(card.filename)}" alt="${card.name}">
+                                <div style="position:absolute;bottom:8px;left:0;right:0;background:rgba(0,0,0,0.75);padding:5px;font-size:12px;color:#ffd700;">
+                                    ${card.name}<br><small>${isUpright ? card.upright : card.reversed}</small>
+                                </div>`;
+            }, 400);
+            selectedCards.push(card);
+        }
 
-        const camera = new Camera(videoElement, {
-            onFrame: async () => { await hands.send({image: videoElement}); },
-            width: 640, height: 480
-        });
-        
-        camera.start().then(() => { statusText.innerText = "摄像头就绪，张开手掌体验"; })
-        .catch(err => { statusText.innerText = "请允许摄像头访问以体验"; });
+        function drawCards() {
+            if (selectedCards.length < 3) return alert('请至少点击3张卡牌～');
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = `
+                <h2>✦ 你的命运三张牌 ✦</h2>
+                <div style="display:flex;gap:30px;justify-content:center;flex-wrap:wrap;">
+                    <div style="text-align:center;"><strong>过去</strong><br>${selectedCards[0].name}<br><div style="background:rgba(0,0,0,0.7);padding:10px;margin-top:8px;border-radius:8px;">${Math.random()>0.5?selectedCards[0].upright:selectedCards[0].reversed}</div></div>
+                    <div style="text-align:center;"><strong>现在</strong><br>${selectedCards[1].name}<br><div style="background:rgba(0,0,0,0.7);padding:10px;margin-top:8px;border-radius:8px;">${Math.random()>0.5?selectedCards[1].upright:selectedCards[1].reversed}</div></div>
+                    <div style="text-align:center;"><strong>未来</strong><br>${selectedCards[2].name}<br><div style="background:rgba(0,0,0,0.7);padding:10px;margin-top:8px;border-radius:8px;">${Math.random()>0.5?selectedCards[2].upright:selectedCards[2].reversed}</div></div>
+                </div>
+                <p style="margin-top:30px;font-size:1.1rem;opacity:0.85;">记住：塔罗只是指引，最终命运掌握在你手中 ✨</p>
+            `;
+        }
 
+        function toggleCamera() {
+            const video = document.getElementById('camera');
+            if (video.style.display === 'block') {
+                video.style.display = 'none';
+                if (cameraStream) cameraStream.getTracks().forEach(t=>t.stop());
+            } else {
+                navigator.mediaDevices.getUserMedia({video:true})
+                    .then(s=>{ cameraStream=s; video.srcObject=s; video.style.display='block'; });
+            }
+        }
+
+        function createParticle() {
+            const p = document.createElement('div'); p.className='particle';
+            p.style.left = Math.random()*100 + 'vw'; p.style.top = '90vh';
+            document.body.appendChild(p);
+            setTimeout(()=>p.remove(),2000);
+        }
     </script>
 </body>
 </html>
