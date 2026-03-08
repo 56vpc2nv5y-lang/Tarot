@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>手势交互塔罗牌 - 完整版</title>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+    <style>
+        body {
+            margin: 0; overflow: hidden; background-color: #0f0f1b;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: white; user-select: none;
+        }
+        #video-container {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            z-index: -1; opacity: 0.15; transform: scaleX(-1);
+        }
+        video { width: 100%; height: 100%; object-fit: cover; }
+        
+        #ui-layer {
+            position: absolute; top: 20px; left: 0; width: 100%; text-align: center; z-index: 10;
+            pointer-events: none;
+        }
+        #status-text { font-size: 20px; font-weight: bold; color: #e94560; text-shadow: 0 0 10px rgba(233,69,96,0.8); transition: opacity 0.5s;}
+
+        #deck-container {
+            position: absolute; top: 25%; left: 0; width: 100%; height: 250px;
+            display: flex; align-items: center; justify-content: center;
+        }
+
+        /* --- 3D 卡牌样式 --- */
+        .card {
+            width: 120px; height: 200px; position: absolute;
+            perspective: 1000px; /* 赋予 3D 空间感 */
+            transition: transform 0.2s;
+        }
+        .card.grabbed { transition: none; z-index: 100; }
+        .card.placed { transition: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94); }
+
+        .card-inner {
+            position: relative; width: 100%; height: 100%; text-align: center;
+            transition: transform 0.8s; transform-style: preserve-3d; /* 保持 3D 子元素 */
+            box-shadow: 0 10px 20px rgba(0,0,0,0.5); border-radius: 10px;
+        }
+        .card.grabbed .card-inner { box-shadow: 0 0 30px #e94560; }
+        
+        /* 翻转触发类 */
+        .card.flipped .card-inner { transform: rotateY(180deg); }
+
+        .card-front, .card-back {
+            position: absolute; width: 100%; height: 100%; backface-visibility: hidden; /* 隐藏背面 */
+            border-radius: 10px; display: flex; align-items: center; justify-content: center;
+            flex-direction: column; padding: 10px; box-sizing: border-box;
+        }
+        /* 牌背 */
+        .card-back {
+            background: linear-gradient(135deg, #0f3460, #1a1a2e); border: 2px solid #e94560;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 100 100"><circle cx="50" cy="50" r="20" stroke="%23e94560" stroke-width="2" fill="none"/><path d="M50 10 L50 90 M10 50 L90 50" stroke="%23e94560" stroke-width="2"/></svg>');
+            background-size: cover;
+        }
+        /* 牌面 (翻过来后的样子) */
+        .card-front {
+            background: #eaddcf; color: #1a1a2e; border: 2px solid #d4af37;
+            transform: rotateY(180deg); /* 初始就反转 180 度 */
+        }
+        .card-front h3 { font-size: 16px; margin: 0 0 10px 0; color: #8b0000; }
+        .card-front img { width: 80%; border-radius: 5px; margin-bottom: 5px; }
+
+        /* --- 槽位与解牌区域 --- */
+        #slots-container {
+            position: absolute; bottom: 180px; left: 0; width: 100%;
+            display: flex; justify-content: center; gap: 40px;
+        }
+        .slot {
+            width: 120px; height: 200px; border: 2px dashed #533483; border-radius: 10px;
+        }
+
+        #reading-area {
+            position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
+            width: 80%; max-width: 600px; min-height: 120px;
+            background: rgba(26, 26, 46, 0.85); border: 1px solid #e94560; border-radius: 10px;
+            padding: 20px; box-sizing: border-box; display: none; /* 初始隐藏 */
+            font-size: 16px; line-height: 1.6; text-shadow: 1px 1px 2px black;
+        }
+        .reading-title { color: #d4af37; font-weight: bold; margin-bottom: 10px; font-size: 18px; }
+
+        #hand-cursor {
+            position: fixed; width: 30px; height: 30px; border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.8); box-shadow: 0 0 15px white;
+            pointer-events: none; z-index: 999; top: -50px; left: -50px;
+            transform: translate(-50%, -50%); transition: background-color 0.2s, transform 0.2s;
+        }
+        #hand-cursor.fist { background-color: #e94560; transform: translate(-50%, -50%) scale(0.6); }
+        #hand-cursor.index { background-color: #f9ed69; transform: translate(-50%, -50%) scale(0.8); border-radius: 5px; }
+    </style>
+</head>
+<body>
+
+    <div id="video-container"><video id="webcam" autoplay playsinline></video></div>
+
+    <div id="ui-layer">
+        <h1 style="margin-top: 10px; font-size: 24px;">手势塔罗牌：过去 · 现在 · 未来</h1>
+        <div id="status-text">正在加载 AI 模型...</div>
+    </div>
+
+    <div id="deck-container"></div>
+
+    <div id="slots-container">
+        <div class="slot" id="slot-1"></div>
+        <div class="slot" id="slot-2"></div>
+        <div class="slot" id="slot-3"></div>
+    </div>
+
+    <div id="reading-area">
+        <div class="reading-title" id="reading-title">等待命运的启示...</div>
+        <div id="reading-text"></div>
+    </div>
+
+    <div id="hand-cursor"></div>
+
+    <script>
+        // --- 模拟塔罗牌数据库 (可自行替换为你的真实图片路径和解牌文案) ---
+        const tarotDatabase = [
+            { name: "愚者 (The Fool)", meaning: "代表无限的可能性、自发性和全新的旅程。现在是放下包袱，凭直觉大胆向前迈出一步的时候了。" },
+            { name: "魔术师 (The Magician)", meaning: "代表创造力、意志力和天赋。你已经拥有了实现目标所需的一切资源，请将你的想法化为现实。" },
+            { name: "女祭司 (The High Priestess)", meaning: "代表潜意识、直觉和神秘。答案不在外界，请向内寻求，倾听你内心深处的声音。" },
+            { name: "隐士 (The Hermit)", meaning: "代表自省、孤独和内在的指引。你需要暂时远离人群的喧嚣，给自己留出思考的空间。" },
+            { name: "命运之轮 (Wheel of Fortune)", meaning: "代表命运的转折、不可预测性和周期的变化。好运即将降临，请顺应改变的洪流。" },
+            { name: "星星 (The Star)", meaning: "代表希望、灵感和内心的平静。在经历了黑暗之后，你将迎来治愈和充满光芒的未来。" }
+        ];
+
+        const videoElement = document.getElementById('webcam');
+        const deckContainer = document.getElementById('deck-container');
+        const cursor = document.getElementById('hand-cursor');
+        const statusText = document.getElementById('status-text');
+        const readingArea = document.getElementById('reading-area');
+        const readingTitle = document.getElementById('reading-title');
+        const readingText = document.getElementById('reading-text');
+        
+        const TOTAL_CARDS = 22;
+        let cards = [];
+        let scrollOffset = 0, scrollSpeed = 0;
+        let handX = window.innerWidth / 2, handY = window.innerHeight / 2;
+        let currentGesture = 'open';
+        let grabbedCard = null;
+        let drawnCardsCount = 0;
+        const MAX_DRAW = 3;
+        let drawnCardsElements = []; // 记录被抽出的卡牌元素
+
+        // 初始化卡牌 DOM
+        for (let i = 0; i < TOTAL_CARDS; i++) {
+            let card = document.createElement('div');
+            card.className = 'card';
+            card.id = `card-${i}`;
+            // 嵌套 3D 结构
+            card.innerHTML = `
+                <div class="card-inner">
+                    <div class="card-back"></div>
+                    <div class="card-front">
+                        <h3 class="card-name"></h3>
+                    </div>
+                </div>
+            `;
+            deckContainer.appendChild(card);
+            cards.push(card);
+        }
+
+        // --- 动画循环 ---
+        function renderLoop() {
+            if (drawnCardsCount < MAX_DRAW) {
+                if (currentGesture === 'open' && !grabbedCard) {
+                    const screenWidth = window.innerWidth;
+                    if (handX > screenWidth * 0.7) scrollSpeed = 6;
+                    else if (handX < screenWidth * 0.3) scrollSpeed = -6;
+                    else scrollSpeed *= 0.9;
+                } else if (currentGesture === 'index') {
+                    scrollSpeed = 0;
+                } else {
+                    scrollSpeed *= 0.9;
+                }
+                scrollOffset += scrollSpeed;
+                const maxScroll = (TOTAL_CARDS - 1) * 30; 
+                if (scrollOffset > maxScroll) scrollOffset = maxScroll;
+                if (scrollOffset < -maxScroll) scrollOffset = -maxScroll;
+            }
+
+            cards.forEach((card, index) => {
+                if (card === grabbedCard || card.classList.contains('placed')) return;
+                let offset = (index - TOTAL_CARDS / 2) * 60 - scrollOffset;
+                let curve = Math.abs(offset) * 0.1;
+                let zIndex = 50 - Math.floor(Math.abs(offset) / 10);
+                card.style.transform = `translateX(${offset}px) translateY(${curve}px) rotate(${offset * 0.05}deg)`;
+                card.style.zIndex = zIndex;
+            });
+
+            if (grabbedCard) {
+                grabbedCard.style.left = `${handX - 60}px`;
+                grabbedCard.style.top = `${handY - 100}px`;
+                grabbedCard.style.transform = `rotate(0deg)`;
+            }
+            requestAnimationFrame(renderLoop);
+        }
+        renderLoop();
+
+        // --- MediaPipe 识别 ---
+        function detectGesture(landmarks) {
+            const isFingerCurled = (tip, mcp) => landmarks[tip].y > landmarks[mcp].y;
+            const indexCurled = isFingerCurled(8, 5);
+            const middleCurled = isFingerCurled(12, 9);
+            const ringCurled = isFingerCurled(16, 13);
+            const pinkyCurled = isFingerCurled(20, 17);
+            const curledCount = [indexCurled, middleCurled, ringCurled, pinkyCurled].filter(Boolean).length;
+
+            if (curledCount >= 3) return 'fist';
+            else if (!indexCurled && middleCurled && ringCurled && pinkyCurled) return 'index';
+            else return 'open';
+        }
+
+        function onResults(results) {
+            if (drawnCardsCount >= MAX_DRAW) return;
+            if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+                const landmarks = results.multiHandLandmarks[0];
+                const rawX = 1 - ((landmarks[5].x + landmarks[0].x) / 2);
+                const rawY = (landmarks[5].y + landmarks[0].y) / 2;
+                handX = handX + (rawX * window.innerWidth - handX) * 0.3;
+                handY = handY + (rawY * window.innerHeight - handY) * 0.3;
+                cursor.style.left = `${handX}px`;
+                cursor.style.top = `${handY}px`;
+
+                const newGesture = detectGesture(landmarks);
+                if (newGesture !== currentGesture) {
+                    currentGesture = newGesture;
+                    handleGestureChange();
+                }
+            }
+        }
+
+        function handleGestureChange() {
+            cursor.className = currentGesture;
+            if (currentGesture === 'fist' && !grabbedCard) {
+                let closestCard = null, minDistance = Infinity;
+                cards.forEach(card => {
+                    if (card.classList.contains('placed')) return;
+                    const rect = card.getBoundingClientRect();
+                    const dist = Math.hypot((rect.left + rect.width / 2) - handX, (rect.top + rect.height / 2) - handY);
+                    if (dist < 150 && dist < minDistance) {
+                        minDistance = dist; closestCard = card;
+                    }
+                });
+                if (closestCard) {
+                    grabbedCard = closestCard;
+                    grabbedCard.classList.add('grabbed');
+                    const rect = grabbedCard.getBoundingClientRect();
+                    grabbedCard.style.left = `${rect.left}px`;
+                    grabbedCard.style.top = `${rect.top}px`;
+                }
+            }
+
+            if (currentGesture === 'open' && grabbedCard) {
+                drawnCardsCount++;
+                const targetSlot = document.getElementById(`slot-${drawnCardsCount}`);
+                const slotRect = targetSlot.getBoundingClientRect();
+                
+                grabbedCard.classList.remove('grabbed');
+                grabbedCard.classList.add('placed');
+                grabbedCard.style.left = `${slotRect.left}px`;
+                grabbedCard.style.top = `${slotRect.top}px`;
+                grabbedCard.style.transform = 'rotate(0deg)';
+                
+                drawnCardsElements.push(grabbedCard);
+                grabbedCard = null;
+
+                if (drawnCardsCount >= MAX_DRAW) {
+                    statusText.innerText = "抽取完毕，即将开启命运的解读...";
+                    cursor.style.display = 'none'; // 隐藏光标
+                    setTimeout(startReading, 1500); // 1.5秒后开始自动翻牌
+                }
+            }
+        }
+
+        // --- 打字机效果函数 ---
+        function typeWriter(text, element, speed = 50) {
+            return new Promise(resolve => {
+                element.innerHTML = "";
+                let i = 0;
+                function type() {
+                    if (i < text.length) {
+                        element.innerHTML += text.charAt(i);
+                        i++;
+                        setTimeout(type, speed);
+                    } else {
+                        resolve(); // 打字完成后解除 Promise 阻塞
+                    }
+                }
+                type();
+            });
+        }
+
+        // --- 核心解牌逻辑 (自动翻牌 + 渐显) ---
+        async function startReading() {
+            readingArea.style.display = 'block';
+            statusText.style.opacity = '0'; // 隐藏顶部提示
+            
+            // 随机从库里选3张牌
+            let shuffledDb = [...tarotDatabase].sort(() => 0.5 - Math.random());
+            let selectedData = shuffledDb.slice(0, 3);
+            const positions = ["【过去】", "【现在】", "【未来】"];
+
+            for (let i = 0; i < 3; i++) {
+                let cardEl = drawnCardsElements[i];
+                let data = selectedData[i];
+
+                // 1. 将数据写入卡牌正面 DOM
+                let frontName = cardEl.querySelector('.card-name');
+                frontName.innerText = data.name;
+                // 如果你有真实的图片，可以在这里动态添加 img 标签
+                // let frontEl = cardEl.querySelector('.card-front');
+                // frontEl.innerHTML += `<img src="your-image-url.jpg">`;
+
+                // 2. 触发 CSS 3D 翻转
+                cardEl.classList.add('flipped');
+
+                // 3. 更新解牌区标题
+                readingTitle.innerText = `${positions[i]} - ${data.name}`;
+                
+                // 4. 等待打字机效果完成
+                await typeWriter(data.meaning, readingText, 60);
+
+                // 5. 读完一张牌后，停顿 2 秒再翻下一张
+                if (i < 2) {
+                    await new Promise(r => setTimeout(r, 2000));
+                }
+            }
+
+            // 结尾收尾
+            setTimeout(() => {
+                readingTitle.innerText = "命运的指引已完成";
+                readingText.innerHTML += "<br><br><i>刷新页面可重新抽取。</i>";
+            }, 1000);
+        }
+
+        // --- 初始化摄像头 ---
+        const hands = new Hands({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`});
+        hands.setOptions({ maxNumHands: 1, modelComplexity: 1, minDetectionConfidence: 0.7, minTrackingConfidence: 0.7 });
+        hands.onResults(onResults);
+
+        const camera = new Camera(videoElement, {
+            onFrame: async () => { await hands.send({image: videoElement}); },
+            width: 640, height: 480
+        });
+        
+        camera.start().then(() => { statusText.innerText = "摄像头已就绪，请张开手掌体验"; })
+        .catch(err => { statusText.innerText = "请允许访问摄像头以使用手势交互"; });
+
+    </script>
+</body>
+</html>
