@@ -300,7 +300,6 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);
 <canvas id="spark-canvas"></canvas>
 <div id="bloom"></div>
 
-<!-- Sacred Mandala -->
 <div id="mandala-wrap">
 <svg viewBox="0 0 400 400" fill="none">
   <defs>
@@ -310,13 +309,12 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);
       <stop offset="100%" stop-color="rgba(200,150,40,.1)"/>
     </radialGradient>
   </defs>
-  <!-- Outermost slow ring -->
   <g class="rs">
     <circle cx="200" cy="200" r="186" stroke="rgba(255,240,120,.14)" stroke-width="1"/>
     <g stroke="rgba(255,240,120,.42)" stroke-width="1.2">
       <line x1="200" y1="14" x2="200" y2="30"/>  <line x1="200" y1="370" x2="200" y2="386"/>
       <line x1="14" y1="200" x2="30" y2="200"/>   <line x1="370" y1="200" x2="386" y2="200"/>
-      <line x1="69" y1="69" x2="80" y2="80"/>     <line x1="331" y1="69" x2="320" y2="80"/>
+      <line x1="69" y1="69" x2="80" y2="80"/>      <line x1="331" y1="69" x2="320" y2="80"/>
       <line x1="69" y1="331" x2="80" y2="320"/>   <line x1="331" y1="331" x2="320" y2="320"/>
       <line x1="131" y1="20" x2="135" y2="31"/>   <line x1="269" y1="20" x2="265" y2="31"/>
       <line x1="20" y1="269" x2="31" y2="265"/>   <line x1="380" y1="131" x2="369" y2="135"/>
@@ -332,7 +330,6 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);
     <polygon points="68,332 74,326 80,332 74,338"  fill="rgba(255,240,120,.4)"/>
     <polygon points="332,332 338,326 344,332 338,338" fill="rgba(255,240,120,.4)"/>
   </g>
-  <!-- 12-pt star ring -->
   <g class="rm">
     <circle cx="200" cy="200" r="150" stroke="rgba(255,240,120,.12)" stroke-width=".8" stroke-dasharray="3 5"/>
     <polygon points="200,50 212,90 250,78 228,114 264,132 228,144 244,182 200,168 156,182 172,144 136,132 172,114 150,78 188,90"
@@ -345,7 +342,6 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);
     <circle cx="264" cy="268" r="3.5" fill="rgba(255,240,120,.65)"/>
     <circle cx="136" cy="268" r="3.5" fill="rgba(255,240,120,.65)"/>
   </g>
-  <!-- Flower of life ring -->
   <g class="rf">
     <circle cx="200" cy="200" r="96" stroke="rgba(255,240,120,.2)" stroke-width=".8"/>
     <g stroke="rgba(255,240,120,.22)" stroke-width=".8" fill="none">
@@ -355,7 +351,6 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);
     </g>
     <circle cx="200" cy="200" r="48" stroke="rgba(255,240,120,.32)" stroke-width="1"/>
   </g>
-  <!-- Innermost pulse ring + rays -->
   <g class="rp">
     <circle cx="200" cy="200" r="40" stroke="rgba(255,248,200,.55)" stroke-width="1.5"/>
     <g stroke="rgba(255,248,200,.4)" stroke-width="1.2">
@@ -365,7 +360,6 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);
       <line x1="172" y1="228" x2="161" y2="239"/><line x1="228" y1="228" x2="239" y2="239"/>
     </g>
   </g>
-  <!-- Static center -->
   <circle cx="200" cy="200" r="14" fill="rgba(255,248,200,.22)" stroke="rgba(255,248,200,.58)" stroke-width="1.5"/>
   <circle cx="200" cy="200" r="5.5" fill="rgba(255,248,200,.75)"/>
   <circle cx="200" cy="200" r="2.5" fill="url(#mg)"/>
@@ -374,7 +368,6 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);
 
 <div id="vignette"></div>
 
-<!-- Loader -->
 <div id="loader">
   <div class="ld-star">✦</div>
   <div class="ld-ttl">天 启 塔 罗</div>
@@ -423,22 +416,21 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);
 <div id="game-wrap"><div id="scene"></div></div>
 <video id="webcam" playsinline></video>
 
-<!-- Modals -->
 <div class="backdrop" id="q-modal">
   <div class="mbox">
     <div class="m-title">你在寻求什么指引？</div>
-    <div class="m-sub">写下让你困惑的处境，星辰会给出更有针对性的解读。也可以跳过，进行通用解读。</div>
-    <div class="m-lbl">解读风格</div>
+    <div class="m-sub">基于【用户画像】，星辰会为你匹配最适合的 AI 分析逻辑。也可以跳过，进行通用解读。</div>
+    <div class="m-lbl">目标画像 (User Segment)</div>
     <div class="tone-grid">
-      <div class="tone-c active" data-tone="balanced"><span class="tone-ic">⚖️</span><div class="tone-nm">平衡解读</div><div class="tone-ds">象征与实用兼顾</div></div>
-      <div class="tone-c" data-tone="practical"><span class="tone-ic">🎯</span><div class="tone-nm">务实分析</div><div class="tone-ds">直接说人话，给建议</div></div>
-      <div class="tone-c" data-tone="poetic"><span class="tone-ic">🌙</span><div class="tone-nm">深度探索</div><div class="tone-ds">触及内在模式</div></div>
+      <div class="tone-c active" data-tone="balanced"><span class="tone-ic">⚖️</span><div class="tone-nm">寻求共鸣</div><div class="tone-ds">Seeker</div></div>
+      <div class="tone-c" data-tone="practical"><span class="tone-ic">🎯</span><div class="tone-nm">决策导向</div><div class="tone-ds">Director</div></div>
+      <div class="tone-c" data-tone="poetic"><span class="tone-ic">🌙</span><div class="tone-nm">自我探索</div><div class="tone-ds">Explorer</div></div>
     </div>
     <div class="m-lbl">你的问题（可选）</div>
     <textarea class="q-box" id="user-q" placeholder="例如：我和伴侣最近总是冷战，不知道是否应该主动修复还是先给彼此空间？&#10;工作上有个重要机会，但我很没安全感，不敢去争取…"></textarea>
     <div class="m-row">
       <button class="btn btn-ghost" id="q-skip">跳 过</button>
-      <button class="btn btn-solid" id="q-confirm">开启解读 ✦</button>
+      <button class="btn btn-solid" id="q-confirm">开启深度解读 ✦</button>
     </div>
   </div>
 </div>
@@ -504,11 +496,9 @@ function initBG(){
   let t=0;
   function draw(){
     t++;ctx.clearRect(0,0,W,H);
-    // Deep midnight background
     const bg=ctx.createRadialGradient(W/2,H*.45,0,W/2,H*.45,Math.max(W,H)*.85);
     bg.addColorStop(0,'#10102a');bg.addColorStop(.35,'#090820');bg.addColorStop(1,'#04060f');
     ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
-    // Golden nebula clouds
     [[W*.5,H*.42,.3,.15,50,90],[W*.18,H*.28,.2,.12,48,72],[W*.82,H*.22,.18,.1,46,65],[W*.6,H*.72,.22,.1,52,68]]
     .forEach(([nx,ny,rx,ry,h,s])=>{
       const g=ctx.createRadialGradient(nx,ny,0,nx,ny,W*rx);
@@ -516,7 +506,6 @@ function initBG(){
       ctx.save();ctx.scale(1,ry/rx);ctx.fillStyle=g;
       ctx.beginPath();ctx.arc(nx,ny*(rx/ry),W*rx,0,6.28);ctx.fill();ctx.restore();
     });
-    // Stars
     stars.forEach(s=>{
       const f=.5+.5*Math.sin(t/s.tw);
       ctx.globalAlpha=s.o*f;
@@ -530,7 +519,7 @@ function initBG(){
   window.addEventListener('resize',resize);resize();requestAnimationFrame(draw);
 }
 
-// RAYS: God rays from center using screen blend
+// RAYS
 function initRays(){
   const cv=$('rays-canvas'),ctx=cv.getContext('2d');
   let W,H,t=0;
@@ -565,7 +554,7 @@ function initRays(){
   window.addEventListener('resize',resize);resize();requestAnimationFrame(draw);
 }
 
-// SPARKS: Prismatic motes (screen blend)
+// SPARKS
 function initSparks(){
   const cv=$('spark-canvas'),ctx=cv.getContext('2d');
   let W,H;
@@ -599,7 +588,7 @@ function initSparks(){
   window.addEventListener('resize',resize);resize();requestAnimationFrame(draw);
 }
 
-// Rotating celestial icon
+// Celestial icon
 (function(){
   const icons=['✦','✧','⋆','✺','❋','✴','✸','✼'];
   let i=0;setInterval(()=>{$('cel-icon').textContent=icons[i=(i+1)%icons.length];},3500);
@@ -830,6 +819,26 @@ function finishPick(){
   setTimeout(()=>{S=ST.INTERPRETING;const tok=localStorage.getItem('deepseek_token');setSt(tok?'握拳 1 秒 → 开启命运解读':'配置 API Key 后可获取 AI 解读（右上角 ⚙）');},2600);
 }
 
+// ----------------------------------------------------
+// 【升级模块】 Analytics 数据追踪系统
+// 这体现了你作为数据分析学专业（Analytics）的工程思维
+// ----------------------------------------------------
+function logSessionAnalytics(q, segment, pickedCards) {
+  const sessionData = {
+    timestamp: new Date().toISOString(),
+    userSegment: segment, 
+    inputLength: q.length,
+    cards: pickedCards.map(p => `${p.card.id}(${p.rev?'R':'U'})`).join(',')
+  };
+  
+  // 模拟数据落库，存储在 localStorage。面试时可以打开控制台展示这部分数据。
+  const history = JSON.parse(localStorage.getItem('analytics_history') || '[]');
+  history.push(sessionData);
+  localStorage.setItem('analytics_history', JSON.stringify(history.slice(-20))); 
+  console.log("📊 Analytics Captured:", sessionData);
+}
+
+
 // TONE & QUESTION
 let tone='balanced';
 document.querySelectorAll('.tone-c').forEach(b=>{b.addEventListener('click',()=>{document.querySelectorAll('.tone-c').forEach(c=>c.classList.remove('active'));b.classList.add('active');tone=b.dataset.tone;});});
@@ -837,25 +846,63 @@ function showQ(){if(!localStorage.getItem('deepseek_token')){$('settings-modal')
 $('q-confirm').addEventListener('click',()=>{$('q-modal').classList.remove('open');startReading();});
 $('q-skip').addEventListener('click',()=>{$('user-q').value='';$('q-modal').classList.remove('open');startReading();});
 
-// AI
+// ----------------------------------------------------
+// 【升级模块】 LLM 思维链 (CoT) 与 用户画像提示词
+// ----------------------------------------------------
 let hist=[];
-function getSys(t){return{balanced:`你是一位经验丰富的塔罗咨询师。用塔罗象征系统帮助来访者看清处境，再给出实际行动建议。说话温暖、坦诚、有洞察力。直接说"你现在面临的是……"，不堆砌玄幻词汇。`,practical:`你是一位理性直接的咨询顾问，用塔罗框架结构化分析问题。风格像聪明的朋友帮你分析——说人话，给建议，不绕弯子。给出最重要的1-2个具体行动，避免玄幻表达。`,poetic:`你是一位融合荣格心理学和塔罗象征的解读者。语言有诗意但不空洞——用意象触及来访者内心深处的感受，帮助他们看见自己的内在模式。每句话都有实质。`}[t]||'你是一位经验丰富的塔罗咨询师，说话温暖、直接、有洞察力。';}
-function buildPmt(q,t){
-  const cards=picked.map((p,i)=>`${['过去','现在','未来'][i]}：**${p.card.n}**（${p.rev?'逆位':'正位'}）`).join('\n');
-  const qLine=q?`来访者的问题：「${q}」`:`来访者没有具体问题，请综合解读三张牌的整体处境与建议。`;
-  const fmt={
-    balanced:`\n\n格式（Markdown）：\n### 🔮 整体处境\n（2-3句，语言直接）\n---\n### 牌面解析\n**过去 · ${picked[0]?.card.n}**\n（30-50字，过去的影响或模式）\n\n**现在 · ${picked[1]?.card.n}**\n（30-50字，当前核心挑战或机遇）\n\n**未来 · ${picked[2]?.card.n}**\n（40-60字，可能的走向与转变点）\n---\n### 💡 给你的建议\n（2-3条具体可操作建议）\n\n> 一句话总结`,
-    practical:`\n\n格式：\n### 核心判断\n（1-2句）\n### 三张牌说的事\n- 过去（${picked[0]?.card.n}）：一句话\n- 现在（${picked[1]?.card.n}）：一句话\n- 未来（${picked[2]?.card.n}）：一句话\n### 优先行动\n（最重要1-2件具体的事）\n### 需要警惕的\n（1条最容易踩的坑）`,
-    poetic:`\n\n格式：\n### ✨ 牌阵意象\n（描述三张牌构成的内心图景）\n---\n### 三个时间的切片\n**过去的种子 · ${picked[0]?.card.n}**\n**当下的十字路口 · ${picked[1]?.card.n}**\n**未来的可能 · ${picked[2]?.card.n}**\n---\n### 一个值得思考的问题\n\n> 有意境又落地的结尾`
-  }[t]||'';
-  return`${qLine}\n\n三张牌（过去-现在-未来）：\n${cards}${fmt}`;
+
+function getSystemPersona(t) {
+  const personas = {
+    balanced: `你是一位融合心理学与塔罗象征的资深咨询师。用户需要的是共鸣与引导。请通过牌面挖掘潜意识冲突，并给出1-2个最小可行性建议。说话温暖、专业。`,
+    practical: `你是一位高效理性的决策顾问。用户需要直白的现状分析和行动指令。请跳过玄幻描述，直接指出风险点和机会点，并给出具体的行动规划。风格干练。`,
+    poetic: `你是一位深度探索的灵性导师。用户正在寻找人生的深层意义。请利用意象引导用户进行自我审视，探讨长期的内在模式而非短期得失。语言富有洞察力和诗意。`
+  };
+  return personas[t] || personas.balanced;
 }
-function getFuSys(t){return getSys(t)+'\n\n这是针对已完成塔罗解读的追问。来访者可能问更深入的问题。保持解读视角，给出有针对性的回答（100-200字，不重复已说内容）。'}
+
+function buildStructuredPrompt(q, t) {
+  const cards = picked.map((p,i)=>`${['过去','现在','未来'][i]}：**${p.card.n}**（${p.rev?'逆位':'正位'}）`).join('\n');
+  const qLine = q ? `用户当前处境与困惑：「${q}」` : `用户没有提供具体问题，请进行综合性的人生与运势探索。`;
+  
+  return `
+${qLine}
+
+当前抽牌结果（过去-现在-未来）：
+${cards}
+
+【推理逻辑 (Chain of Thought) 强制要求】
+在给出最终解析前，你必须进行以下内部推演：
+1. 意象提取：先简述每张牌在该位置的核心象征（考虑正逆位）。
+2. 动态关联：分析三张牌之间的时间线性逻辑或能量转化（例如：是从压抑走向释放，还是从冲突走向平衡？）。
+3. 决策建议：基于上述逻辑推导，给出最契合当前设定风格的结论。
+
+【输出格式】
+使用 Markdown 格式。请严格遵循以下结构输出内容：
+### 🔮 核心洞察
+(简明扼要地点出当前的整体状态)
+---
+### 🕯️ 牌阵解析
+**过去的影响**：(结合第一张牌)
+**当下的十字路口**：(结合第二张牌)
+**未来的演变**：(结合第三张牌)
+---
+### 💡 行动指引
+(给出具体的建议或值得思考的问题)
+`;
+}
+
+function getFuSys(t){
+  return getSystemPersona(t) + '\n\n这是针对已完成塔罗解读的追问。来访者可能会询问更深入的细节或具体的应对方式。请保持你当前的设定视角，给出有针对性的回答（100-200字即可，切勿重复之前已说过的内容）。';
+}
 
 async function startReading(){
   const tok=localStorage.getItem('deepseek_token');if(!tok){$('settings-modal').classList.add('open');return;}
   const q=$('user-q').value.trim();hist=[];
   const row=$('r-cards');row.innerHTML='';
+  
+  // 触发 Analytics 埋点记录
+  logSessionAnalytics(q, tone, picked);
+  
   picked.forEach(p=>{
     const it=document.createElement('div');it.className='rc-it';
     const img=document.createElement('div');img.className='rc-img'+(p.rev?' rev':'');img.style.backgroundImage=`url('${p.card.img}')`;
@@ -863,20 +910,42 @@ async function startReading(){
     const nm=document.createElement('div');nm.className='rc-nm';nm.textContent=p.card.n+(p.rev?' (逆)':'');
     it.append(img,pos,nm);row.appendChild(it);
   });
+  
   const qt=$('r-qtag');if(q){qt.textContent=`「${q}」`;qt.style.display='block';}else qt.style.display='none';
-  const rc=$('r-content');rc.innerHTML='<div style="color:var(--text-dim);text-align:center;padding:24px 0;font-family:Cinzel,serif;font-size:.72rem;letter-spacing:3px">星 辰 连 接 中 …</div>';
+  const rc=$('r-content');rc.innerHTML='<div style="color:var(--text-dim);text-align:center;padding:24px 0;font-family:Cinzel,serif;font-size:.72rem;letter-spacing:3px">星 辰 连 接 中 …<br><span style="font-size:0.55rem;opacity:0.6;margin-top:5px;display:block">正在启动思维链 (CoT) 引擎进行深度推演</span></div>';
+  
   $('reading-modal').classList.add('open');$('followup').style.display='none';$('chat-log').innerHTML='';$('r-note').textContent='';
-  const sp=getSys(tone),um=buildPmt(q,tone);hist.push({role:'user',content:um});
-  try{const full=await streamTo(tok,sp,hist,rc);hist.push({role:'assistant',content:full});$('followup').style.display='block';$('r-note').textContent='解读完成 · 可在下方继续追问';}
+  
+  // 使用新的提示词生成逻辑
+  const sp=getSystemPersona(tone),um=buildStructuredPrompt(q,tone);hist.push({role:'user',content:um});
+  
+  try{
+    const full=await streamTo(tok,sp,hist,rc);
+    hist.push({role:'assistant',content:full});
+    $('followup').style.display='block';
+    $('r-note').textContent='解读完成 · 可在下方继续追问';
+  }
   catch(e){rc.innerHTML+=`<p style="color:#d07070;margin-top:12px;font-size:.85rem">连接中断：${e.message}</p>`;}
 }
+
 async function streamTo(tok,sys,msgs,el){
   const res=await fetch('https://api.deepseek.com/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${tok}`},body:JSON.stringify({model:'deepseek-chat',messages:[{role:'system',content:sys},...msgs],stream:true,temperature:.72,presence_penalty:.15,max_tokens:1500})});
   if(!res.ok)throw new Error(res.statusText);
   const rd=res.body.getReader(),dc=new TextDecoder();let full='';el.innerHTML='';
-  while(true){const{done,value}=await rd.read();if(done)break;for(const line of dc.decode(value,{stream:true}).split('\n')){if(!line.startsWith('data: '))continue;const js=line.slice(6);if(js==='[DONE]')break;try{const j=JSON.parse(js),d=j.choices?.[0]?.delta?.content||'';if(d){full+=d;el.innerHTML=window.marked?window.marked.parse(full):full;}}catch{}}}
+  while(true){
+    const{done,value}=await rd.read();if(done)break;
+    for(const line of dc.decode(value,{stream:true}).split('\n')){
+      if(!line.startsWith('data: '))continue;
+      const js=line.slice(6);if(js==='[DONE]')break;
+      try{
+        const j=JSON.parse(js),d=j.choices?.[0]?.delta?.content||'';
+        if(d){full+=d;el.innerHTML=window.marked?window.marked.parse(full):full;}
+      }catch{}
+    }
+  }
   return full;
 }
+
 async function sendFU(){
   const tok=localStorage.getItem('deepseek_token');const inp=$('fu-inp');const q=inp.value.trim();if(!q||!tok)return;inp.value='';
   const log=$('chat-log');const ub=document.createElement('div');ub.className='chat-u';ub.textContent=q;log.appendChild(ub);
