@@ -21,21 +21,47 @@
   --accent-dim-rgb:201,146,42;
   --accent-purple-rgb:180,100,220;
   --theme-hue:0deg;
+  --bg-base:#04060f;
+  --bg-deep:#02030a;
+  --text-main:#f0ead8;
+  --text-mid:#c4b898;
+  --text-dim:#8a8070;
+  --surface:rgba(255,255,255,.03);
 
   --cw:clamp(108px,17vw,182px);
   --ch:calc(var(--cw)*1.75);
-  --bg:#04060f;
+  --bg:var(--bg-base);
   --aureate:rgb(var(--accent-rgb));
   --aureate-lt:rgb(var(--accent-lt-rgb));
   --aureate-dim:rgba(var(--accent-rgb),.4);
   --ink:#04060f;
-  --text:#f0ead8;
-  --text-dim:#8a8070;
-  --text-mid:#c4b898;
-  --surface:rgba(255,255,255,.03);
+  --text:var(--text-main);
   --purple:rgba(var(--accent-purple-rgb),.7);
   --purple-dim:rgba(var(--accent-purple-rgb),.15);
 }
+
+/* ── Light themes ── */
+body[data-mode="light"]{
+  --bg-base:#f5efe2;
+  --bg-deep:#e8dec5;
+  --text-main:#3a2f1a;
+  --text-mid:#6b5a3f;
+  --text-dim:#9c8c70;
+  --surface:rgba(40,28,10,.04);
+  --ink:#3a2f1a;
+}
+body[data-mode="light"] #bg-canvas{opacity:.45;mix-blend-mode:multiply}
+body[data-mode="light"] #rays-canvas{opacity:.5;mix-blend-mode:multiply}
+body[data-mode="light"] #spark-canvas{opacity:.35;mix-blend-mode:multiply}
+body[data-mode="light"] #bloom{mix-blend-mode:multiply;opacity:.5}
+body[data-mode="light"] .mbox{background:linear-gradient(160deg,#fffaee 0%,#f5efe0 60%,#ebe2cc 100%);color:var(--text-main)}
+body[data-mode="light"] .mbox input,
+body[data-mode="light"] .mbox textarea{background:rgba(255,250,235,.7);color:var(--text-main);border-color:rgba(var(--accent-dim-rgb),.35)}
+body[data-mode="light"] .btn-solid{color:#2a1f10}
+body[data-mode="light"] .chat-u{background:rgba(var(--accent-rgb),.12);color:var(--text-main)}
+body[data-mode="light"] .chat-a{background:rgba(60,40,20,.05);color:var(--text-main)}
+body[data-mode="light"] .jentry{background:rgba(255,250,235,.5)}
+body[data-mode="light"] #r-content{background:rgba(255,248,220,.4)}
 @media(max-width:768px)and(orientation:portrait){:root{--cw:clamp(78px,22vw,132px)}}
 @media(orientation:landscape)and(max-height:520px){:root{--cw:clamp(78px,21vh,122px)}}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -153,8 +179,9 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);
 .particle{position:fixed;border-radius:50%;pointer-events:none;z-index:2001;animation:ptcl .9s ease-out forwards}
 @keyframes ptcl{0%{opacity:1;transform:translate(-50%,-50%) scale(1)}100%{opacity:0;transform:translate(-50%,-195px) scale(0)}}
 
-#webcam{position:fixed;bottom:14px;right:14px;width:120px;height:90px;border:1px solid rgba(var(--accent-glow-rgb),.2);opacity:.38;border-radius:7px;transform:scaleX(-1);z-index:100;transition:opacity .3s}
-#webcam:hover{opacity:.65}
+#webcam{position:fixed;bottom:14px;right:14px;width:120px;height:90px;border:1px solid rgba(var(--accent-glow-rgb),.2);opacity:0;border-radius:7px;transform:scaleX(-1);z-index:100;transition:opacity .3s;pointer-events:none;visibility:hidden}
+#webcam.shown{opacity:.38;visibility:visible}
+#webcam.shown:hover{opacity:.65}
 ::-webkit-scrollbar{width:4px}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:rgba(var(--accent-glow-rgb),.18);border-radius:2px}
@@ -169,7 +196,8 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);
 .m-close:hover{color:rgba(var(--accent-lt-rgb),.95);border-color:rgba(var(--accent-glow-rgb),.55);background:rgba(var(--accent-glow-rgb),.06);transform:rotate(90deg)}
 
 /* ── Theme picker ── */
-.theme-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:12px 0 18px}
+.theme-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:6px 0 14px}
+.theme-section-lbl{font-family:'Cinzel',serif;font-size:.6rem;letter-spacing:4px;color:var(--text-dim);text-align:center;margin:6px 0 4px;text-transform:uppercase}
 .theme-c{padding:10px 6px;border-radius:11px;cursor:pointer;border:1px solid rgba(var(--accent-glow-rgb),.12);background:rgba(255,255,200,.02);text-align:center;transition:all .25s;pointer-events:auto}
 .theme-c:hover{border-color:rgba(var(--accent-glow-rgb),.42);transform:translateY(-2px)}
 .theme-c.active{border-color:rgba(var(--accent-glow-rgb),.7);box-shadow:0 0 18px rgba(var(--accent-glow-rgb),.18);background:rgba(var(--accent-glow-rgb),.06)}
@@ -319,9 +347,19 @@ body.reduce-motion .cel-icon{animation:none}
 #copy-reading-btn:hover{border-color:rgba(var(--accent-glow-rgb),.55);color:var(--aureate-lt);background:rgba(var(--accent-glow-rgb),.05)}
 #copy-reading-btn.copied{border-color:rgba(80,200,140,.6);color:rgba(80,200,140,.9);background:rgba(80,200,140,.06)}
 
-/* ── Webcam toggle ── */
-#cam-hide-btn{position:fixed;bottom:110px;right:14px;z-index:101;width:22px;height:22px;border-radius:50%;background:rgba(4,6,15,.8);border:1px solid rgba(var(--accent-glow-rgb),.15);color:rgba(var(--accent-glow-rgb),.35);font-size:.62rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;pointer-events:auto}
-#cam-hide-btn:hover{border-color:rgba(var(--accent-glow-rgb),.45);color:rgba(var(--accent-glow-rgb),.8)}
+/* ── Library ── */
+.lib-tab{padding:6px 12px;border:1px solid rgba(var(--accent-glow-rgb),.2);border-radius:14px;font-family:'Cinzel',serif;font-size:.7rem;letter-spacing:1px;color:var(--text-mid);cursor:pointer;transition:all .2s;pointer-events:auto}
+.lib-tab:hover{border-color:rgba(var(--accent-glow-rgb),.5);color:var(--aureate-lt)}
+.lib-tab.active{background:rgba(var(--accent-glow-rgb),.1);border-color:rgba(var(--accent-glow-rgb),.6);color:var(--aureate-lt)}
+.lib-c{position:relative;cursor:pointer;border-radius:8px;overflow:hidden;border:1px solid rgba(var(--accent-glow-rgb),.12);background:rgba(var(--accent-glow-rgb),.02);transition:all .25s;pointer-events:auto;aspect-ratio:.57}
+.lib-c:hover{border-color:rgba(var(--accent-glow-rgb),.55);transform:translateY(-3px);box-shadow:0 8px 18px rgba(var(--accent-glow-rgb),.15)}
+.lib-c img{width:100%;height:78%;object-fit:cover;display:block;background:#0a0c1c}
+.lib-c .lib-nm{font-size:.58rem;text-align:center;padding:5px 4px;color:var(--text-mid);line-height:1.2;font-family:'Cinzel',serif;letter-spacing:.3px}
+.lib-c:hover .lib-nm{color:var(--aureate-lt)}
+#cd-content img{width:160px;border-radius:9px;display:block;margin:0 auto 14px;box-shadow:0 8px 24px rgba(0,0,0,.5),0 0 0 1px rgba(var(--accent-glow-rgb),.25)}
+.cd-section{margin:12px 0}
+.cd-lbl{font-family:'Cinzel',serif;font-size:.66rem;letter-spacing:2.5px;color:var(--aureate);margin-bottom:4px}
+.cd-txt{font-size:.85rem;color:var(--text-mid);line-height:1.6}
 </style>
 </head>
 <body>
@@ -431,7 +469,6 @@ body.reduce-motion .cel-icon{animation:none}
 
 <div id="game-wrap"><div id="scene"></div></div>
 <video id="webcam" playsinline></video>
-<button id="cam-hide-btn" title="隐藏摄像头">✕</button>
 
 <div class="backdrop" id="q-modal">
   <div class="mbox">
@@ -440,9 +477,9 @@ body.reduce-motion .cel-icon{animation:none}
     <div class="m-sub">写下让你困惑的处境，星辰会给出更有针对性的解读。也可以跳过，进行通用解读。</div>
     <div class="m-lbl">解读风格</div>
     <div class="tone-grid">
-      <div class="tone-c active" data-tone="balanced"><span class="tone-ic">⚖️</span><div class="tone-nm">平衡解读</div><div class="tone-ds">象征与实用兼顾</div></div>
-      <div class="tone-c" data-tone="practical"><span class="tone-ic">🎯</span><div class="tone-nm">务实分析</div><div class="tone-ds">直接说人话给建议</div></div>
-      <div class="tone-c" data-tone="poetic"><span class="tone-ic">🌙</span><div class="tone-nm">深度探索</div><div class="tone-ds">触及内在心理模式</div></div>
+      <div class="tone-c active" data-tone="balanced"><span class="tone-ic">💌</span><div class="tone-nm">慰藉信笺</div><div class="tone-ds">书信体 · 先共情后分析</div></div>
+      <div class="tone-c" data-tone="practical"><span class="tone-ic">🎯</span><div class="tone-nm">理性顾问</div><div class="tone-ds">策略式 · 直给判断与行动</div></div>
+      <div class="tone-c" data-tone="poetic"><span class="tone-ic">🪞</span><div class="tone-nm">心灵镜像</div><div class="tone-ds">荣格式 · 看见你的潜意识</div></div>
     </div>
     <div class="m-lbl">你的问题（可选）</div>
     <textarea class="q-box" id="user-q" placeholder="例如：我和伴侣最近总是冷战，不知道是否应该主动修复还是先给彼此空间？&#10;工作上有个重要机会，但我很没安全感，不敢去争取…" oninput="detectInputIntent(this.value)"></textarea>
@@ -514,6 +551,30 @@ body.reduce-motion .cel-icon{animation:none}
   </div>
 </div>
 
+<div class="backdrop" id="library-modal">
+  <div class="mbox" style="max-width:920px;width:96vw;max-height:94vh;padding:24px">
+    <div class="m-close" data-close="library-modal">✕</div>
+    <div class="m-title" style="margin-bottom:6px">📚 完 整 牌 库</div>
+    <div class="m-sub" style="margin-bottom:14px">78 张韦特塔罗 · 点击查看牌意</div>
+    <div id="lib-tabs" style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin-bottom:14px">
+      <div class="lib-tab active" data-suit="all">全 部</div>
+      <div class="lib-tab" data-suit="major">大阿尔卡纳</div>
+      <div class="lib-tab" data-suit="Wands">权杖</div>
+      <div class="lib-tab" data-suit="Cups">圣杯</div>
+      <div class="lib-tab" data-suit="Swords">宝剑</div>
+      <div class="lib-tab" data-suit="Pentacles">星币</div>
+    </div>
+    <div id="lib-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px;max-height:62vh;overflow-y:auto;padding:6px 4px"></div>
+  </div>
+</div>
+
+<div class="backdrop" id="card-detail-modal">
+  <div class="mbox" style="max-width:480px">
+    <div class="m-close" data-close="card-detail-modal">✕</div>
+    <div id="cd-content"></div>
+  </div>
+</div>
+
 <div class="backdrop" id="settings-modal">
   <div class="mbox" style="max-width:440px;text-align:center">
     <div class="m-close" data-close="settings-modal">✕</div>
@@ -521,11 +582,17 @@ body.reduce-motion .cel-icon{animation:none}
     <div class="m-sub" style="margin-bottom:14px">个性化你的占卜体验</div>
 
     <div class="m-lbl">🎨 视觉主题</div>
+    <div class="theme-section-lbl">夜 间</div>
     <div class="theme-grid" id="theme-grid">
       <div class="theme-c" data-theme="gold"><div class="theme-swatch" style="background:radial-gradient(circle,#fff8c0,#e8c050 60%,#6a4f10)"></div><div class="theme-nm">天启金</div></div>
       <div class="theme-c" data-theme="rose"><div class="theme-swatch" style="background:radial-gradient(circle,#ffd0d8,#d8809a 60%,#6a2440)"></div><div class="theme-nm">玫瑰秘境</div></div>
       <div class="theme-c" data-theme="emerald"><div class="theme-swatch" style="background:radial-gradient(circle,#c8ffd8,#78c8a0 60%,#1a5a3a)"></div><div class="theme-nm">翡翠预言</div></div>
       <div class="theme-c" data-theme="aurora"><div class="theme-swatch" style="background:radial-gradient(circle,#c8e8ff,#8cc8e6 60%,#1a3a6a)"></div><div class="theme-nm">极 光</div></div>
+    </div>
+    <div class="theme-section-lbl">日 间</div>
+    <div class="theme-grid" style="grid-template-columns:repeat(2,1fr);max-width:240px;margin:0 auto 18px">
+      <div class="theme-c" data-theme="dawn"><div class="theme-swatch" style="background:radial-gradient(circle,#fff6dc,#f0b878 60%,#b07840)"></div><div class="theme-nm">晨 光</div></div>
+      <div class="theme-c" data-theme="porcelain"><div class="theme-swatch" style="background:radial-gradient(circle,#f4f0e8,#c8b8a0 60%,#8a7860)"></div><div class="theme-nm">白 瓷</div></div>
     </div>
 
     <div class="m-div"></div>
@@ -536,14 +603,21 @@ body.reduce-motion .cel-icon{animation:none}
 
     <div class="m-div"></div>
 
-    <div style="display:flex;gap:8px;align-items:center;justify-content:space-between;font-size:.74rem;color:var(--text-mid)">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:.74rem;color:var(--text-mid);text-align:left">
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
+        <input type="checkbox" id="cam-toggle" style="width:auto;margin:0;cursor:pointer"> 显示摄像头预览
+      </label>
       <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
         <input type="checkbox" id="haptic-toggle" style="width:auto;margin:0;cursor:pointer"> 触感反馈（移动端）
       </label>
-      <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
-        <input type="checkbox" id="reduce-motion" style="width:auto;margin:0;cursor:pointer"> 简化动画
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;grid-column:span 2">
+        <input type="checkbox" id="reduce-motion" style="width:auto;margin:0;cursor:pointer"> 简化动画（省电模式）
       </label>
     </div>
+
+    <div class="m-div"></div>
+
+    <button class="btn btn-ghost" id="open-library-btn" style="width:100%;justify-content:center;display:flex">📚 浏览完整牌库（78 张）</button>
 
     <div style="display:flex;gap:10px;justify-content:center;margin-top:18px">
       <button class="btn btn-solid" id="key-save">保 存</button>
@@ -564,10 +638,12 @@ const storage = {
 
 // ═════════════════ THEME SYSTEM ═════════════════
 const THEMES = {
-  gold:    { name:'天启金',   rgb:'232,192,80',   ltRgb:'255,248,200', glowRgb:'255,240,120', dimRgb:'201,146,42',  purpleRgb:'180,100,220', hue:'0deg'    },
-  rose:    { name:'玫瑰秘境', rgb:'216,128,156',  ltRgb:'255,210,220', glowRgb:'255,180,200', dimRgb:'180,90,120',  purpleRgb:'200,120,160', hue:'-65deg'  },
-  emerald: { name:'翡翠预言', rgb:'120,200,160',  ltRgb:'200,255,220', glowRgb:'180,255,200', dimRgb:'80,150,110',  purpleRgb:'140,200,180', hue:'85deg'   },
-  aurora:  { name:'极光',     rgb:'140,200,230',  ltRgb:'200,230,255', glowRgb:'180,220,255', dimRgb:'100,150,200', purpleRgb:'160,180,230', hue:'160deg'  }
+  gold:      { name:'天启金',   mode:'dark',  rgb:'232,192,80',  ltRgb:'255,248,200', glowRgb:'255,240,120', dimRgb:'201,146,42', purpleRgb:'180,100,220', hue:'0deg'   },
+  rose:      { name:'玫瑰秘境', mode:'dark',  rgb:'216,128,156', ltRgb:'255,210,220', glowRgb:'255,180,200', dimRgb:'180,90,120', purpleRgb:'200,120,160', hue:'-65deg' },
+  emerald:   { name:'翡翠预言', mode:'dark',  rgb:'120,200,160', ltRgb:'200,255,220', glowRgb:'180,255,200', dimRgb:'80,150,110', purpleRgb:'140,200,180', hue:'85deg'  },
+  aurora:    { name:'极光',     mode:'dark',  rgb:'140,200,230', ltRgb:'200,230,255', glowRgb:'180,220,255', dimRgb:'100,150,200',purpleRgb:'160,180,230', hue:'160deg' },
+  dawn:      { name:'晨光',     mode:'light', rgb:'200,140,80',  ltRgb:'255,232,190', glowRgb:'240,184,120', dimRgb:'160,100,50', purpleRgb:'200,140,100', hue:'0deg'   },
+  porcelain: { name:'白瓷',     mode:'light', rgb:'140,120,90',  ltRgb:'240,232,210', glowRgb:'200,184,150', dimRgb:'110,90,60',  purpleRgb:'150,130,110', hue:'0deg'   }
 };
 function applyTheme(name){
   const t=THEMES[name]||THEMES.gold;
@@ -578,6 +654,7 @@ function applyTheme(name){
   r.setProperty('--accent-dim-rgb',t.dimRgb);
   r.setProperty('--accent-purple-rgb',t.purpleRgb);
   r.setProperty('--theme-hue',t.hue);
+  document.body.setAttribute('data-mode',t.mode);
   storage.set('tarot_theme',name);
   document.querySelectorAll('.theme-c').forEach(c=>c.classList.toggle('active',c.dataset.theme===name));
 }
@@ -624,6 +701,93 @@ const DECK=(()=>{
   );return c;
 })();
 let deck=[],picked=[],els=[],assetsOk=false,assetsFail=false,camOk=false,camErr=false;
+
+// ═════════════════ CARD MEANINGS (78 cards) ═════════════════
+const MEANINGS={
+  // Major Arcana
+  ar00:{up:'纯真、启程、信任、无限可能',rev:'鲁莽、犹豫、回避真实选择',kw:'起点'},
+  ar01:{up:'意志、行动力、技能整合、显化',rev:'操纵、空想、力量被搁置',kw:'掌控'},
+  ar02:{up:'直觉、潜意识、神秘知识、静观',rev:'压抑直觉、表面化、秘密浮现',kw:'内观'},
+  ar03:{up:'丰盛、创造、孕育、母性能量',rev:'依赖、停滞、创造力受阻',kw:'丰盈'},
+  ar04:{up:'权威、结构、稳定、父性能量',rev:'专制、僵化、控制欲',kw:'秩序'},
+  ar05:{up:'传统、信仰、教导、共同体',rev:'反叛、教条主义、寻找自己的路',kw:'传承'},
+  ar06:{up:'关系、选择、价值观契合、结合',rev:'失衡、犹豫、价值冲突',kw:'选择'},
+  ar07:{up:'意志驱动、胜利、自我控制、突破',rev:'失控、方向混乱、内在拉扯',kw:'征服'},
+  ar08:{up:'温柔的力量、耐心、勇气、驯服内在',rev:'自我怀疑、压抑情绪、缺乏自信',kw:'柔韧'},
+  ar09:{up:'独处、内省、智慧、寻找意义',rev:'孤立、退缩过度、拒绝指引',kw:'沉思'},
+  ar10:{up:'转折、循环、命运转向、机会',rev:'坏运气、抗拒变化、循环困住',kw:'转轮'},
+  ar11:{up:'公平、真相、因果、决断',rev:'不公、逃避责任、偏见',kw:'权衡'},
+  ar12:{up:'换视角、暂停、奉献、新的领悟',rev:'拖延、僵局、徒劳的牺牲',kw:'倒悬'},
+  ar13:{up:'结束、蜕变、释放、重生',rev:'抗拒变化、停滞、长期僵局',kw:'蜕变'},
+  ar14:{up:'平衡、调和、节制、耐心整合',rev:'失衡、极端、不耐烦',kw:'调和'},
+  ar15:{up:'束缚、执念、上瘾、阴影',rev:'觉察束缚、释放、解除幻觉',kw:'枷锁'},
+  ar16:{up:'剧变、崩塌、突破伪装、真相显露',rev:'避开灾难、内部崩塌、延迟的瓦解',kw:'瓦解'},
+  ar17:{up:'希望、疗愈、灵感、温柔的指引',rev:'失去信念、自我怀疑、希望黯淡',kw:'微光'},
+  ar18:{up:'幻象、潜意识、不确定、深层恐惧',rev:'迷雾散去、看清真相、释放幻觉',kw:'迷雾'},
+  ar19:{up:'喜悦、活力、清晰、成功显现',rev:'暂时的阴霾、过度乐观、能量受阻',kw:'明亮'},
+  ar20:{up:'觉醒、重生、召唤、宽恕过去',rev:'自责、错过召唤、未完成的清算',kw:'觉醒'},
+  ar21:{up:'完成、整合、圆满、新循环开始',rev:'未竟之事、停滞、缺少最后一步',kw:'圆满'},
+  // Wands
+  waac:{up:'灵感、创造火花、新计划',rev:'拖延、灵感受阻',kw:'火种'},
+  wa02:{up:'规划、远见、抉择伙伴',rev:'计划受阻、犹豫不决',kw:'远眺'},
+  wa03:{up:'扩展、远行、机会到来',rev:'延迟、目光短浅',kw:'远征'},
+  wa04:{up:'庆祝、稳定的根基、团聚',rev:'根基不稳、过渡期',kw:'安顿'},
+  wa05:{up:'竞争、摩擦、活力对抗',rev:'冲突缓解或转入暗处',kw:'交锋'},
+  wa06:{up:'胜利、被认可、凯旋',rev:'胜利推迟、自我怀疑',kw:'凯旋'},
+  wa07:{up:'坚守立场、防御、信念',rev:'压力崩溃、放弃',kw:'坚守'},
+  wa08:{up:'快速行动、信息传递、加速',rev:'拖延、信息混乱',kw:'疾驰'},
+  wa09:{up:'坚韧、伤痕中的警觉',rev:'防御过度、疲惫',kw:'警戒'},
+  wa10:{up:'重担、过载、承担过多',rev:'卸下、释放重担',kw:'重负'},
+  wapa:{up:'探索、好奇、新热情',rev:'分心、不成熟',kw:'信使'},
+  wakn:{up:'冲动、热情行动、冒险',rev:'鲁莽、半途而废',kw:'驰骋'},
+  waqu:{up:'自信、温暖领袖、热情指引',rev:'自我中心、易怒',kw:'炽女'},
+  waki:{up:'远见领袖、果断行动',rev:'独裁、冲动决策',kw:'王者'},
+  // Cups
+  cuac:{up:'新感情、情感涌现、灵性开启',rev:'情感封闭、空虚',kw:'初情'},
+  cu02:{up:'共鸣、双向连接、契合',rev:'失衡的关系、误解',kw:'相契'},
+  cu03:{up:'友谊、庆祝、共同欢愉',rev:'三角关系、过度社交',kw:'欢聚'},
+  cu04:{up:'冷漠、忽视眼前、内省',rev:'重新看见、走出低迷',kw:'怠倦'},
+  cu05:{up:'失落、悲伤、聚焦于失去',rev:'接受失去、看到剩下的',kw:'惋惜'},
+  cu06:{up:'怀旧、童年、纯真',rev:'困在过去、无法前进',kw:'追忆'},
+  cu07:{up:'幻想、多种选择、不切实际',rev:'看清现实、做出取舍',kw:'虚像'},
+  cu08:{up:'离开、寻找更深意义',rev:'徘徊、害怕离开',kw:'告别'},
+  cu09:{up:'满足、心愿达成',rev:'物质满足下的空虚',kw:'如愿'},
+  cu10:{up:'圆满、家庭、情感丰盛',rev:'表面和谐、家庭张力',kw:'团圆'},
+  cupa:{up:'感性、艺术天赋、温柔信息',rev:'情绪化、不成熟',kw:'梦少'},
+  cukn:{up:'浪漫、追求、感性行动',rev:'幻想、不可靠',kw:'痴客'},
+  cuqu:{up:'共情、直觉、情感智慧',rev:'情绪反复、过度共情',kw:'柔后'},
+  cuki:{up:'情感掌控、外柔内稳',rev:'压抑情绪、被动攻击',kw:'渊王'},
+  // Swords
+  swac:{up:'突破思维、清晰真相、新觉知',rev:'混乱、错误判断',kw:'破晓'},
+  sw02:{up:'僵局、回避、需要决断',rev:'打破僵局、看清真相',kw:'踌躇'},
+  sw03:{up:'心痛、悲伤、必要的伤口',rev:'疗愈、释放痛苦',kw:'痛击'},
+  sw04:{up:'休息、恢复、内在整理',rev:'倦怠、需要持续休整',kw:'静养'},
+  sw05:{up:'冲突的胜利、得不偿失',rev:'和解、放下争执',kw:'裂隙'},
+  sw06:{up:'过渡、远离痛苦、转向平静',rev:'仍在挣扎、未完成的告别',kw:'渡水'},
+  sw07:{up:'策略、欺骗、绕道',rev:'坦白、回归正道',kw:'诡计'},
+  sw08:{up:'自缚、被困、视野受限',rev:'看见自由、解除限制',kw:'蒙缚'},
+  sw09:{up:'焦虑、夜不能寐、放大恐惧',rev:'走出阴影、释放担忧',kw:'夜惊'},
+  sw10:{up:'谷底、彻底结束、最坏已过',rev:'缓慢复原、避免最坏',kw:'谷底'},
+  swpa:{up:'好奇、机敏、八卦',rev:'多嘴、刻薄、冲动',kw:'锐少'},
+  swkn:{up:'快速行动、直率、雄辩',rev:'冲动好斗、过度急躁',kw:'锐骑'},
+  swqu:{up:'清晰、独立、理性判断',rev:'冷酷、苛刻、过度防御',kw:'明后'},
+  swki:{up:'权威思维、客观、公正决断',rev:'刻板、咄咄逼人',kw:'明王'},
+  // Pentacles
+  peac:{up:'物质新机会、稳固基础',rev:'机会延迟、根基不稳',kw:'实芽'},
+  pe02:{up:'平衡多重事项、灵活应对',rev:'失衡、应付不来',kw:'兼顾'},
+  pe03:{up:'协作、技艺、被认可',rev:'缺乏配合、技艺不足',kw:'匠心'},
+  pe04:{up:'保有、稳固、控制',rev:'吝啬、抓得过紧',kw:'守财'},
+  pe05:{up:'匮乏感、困境、孤立',rev:'走出困境、获得支持',kw:'困乏'},
+  pe06:{up:'给予与接受、慷慨、平衡',rev:'施受不平衡、债务',kw:'施受'},
+  pe07:{up:'耐心、评估、长期投入',rev:'急于求成、投入未果',kw:'静候'},
+  pe08:{up:'专注、精进、刻意练习',rev:'敷衍、缺乏专注',kw:'精进'},
+  pe09:{up:'独立自足、优雅、自我滋养',rev:'依赖他人、表面富足',kw:'丰裕'},
+  pe10:{up:'家族传承、长期富足、根基',rev:'家庭争端、财务断裂',kw:'承业'},
+  pepa:{up:'好学、起步实干',rev:'拖延、缺乏方向',kw:'实少'},
+  pekn:{up:'稳健推进、可靠、保守',rev:'停滞、固执、无趣',kw:'稳骑'},
+  pequ:{up:'务实、滋养、丰盛母亲',rev:'物质焦虑、过度操劳',kw:'实后'},
+  peki:{up:'富足、稳健、企业家',rev:'贪婪、墨守成规',kw:'实王'}
+};
 
 // Backgrounds
 function initBG(){
@@ -1027,23 +1191,56 @@ $('q-skip').addEventListener('click',()=>{$('user-q').value='';$('q-modal').clas
 let hist=[];
 function getSys(t){
   return {
-    balanced:`你是一位经验丰富的塔罗咨询师。温暖、坦诚、有洞察力。直接说"你现在面临的是……"，不堆砌玄幻词汇。`,
-    practical:`你是一位理性直接的顾问，用塔罗框架分析问题。说人话，给具体可操作建议，不绕弯子。`,
-    poetic:`你融合荣格心理学和塔罗象征。语言有诗意但不空洞，用意象触及来访者内心深处的感受，每句话都有实质。`
+    balanced:`你是一位温柔智慧的塔罗咨询师，擅长以书信的方式回应来访者。
+
+来访者来到你面前时，往往携带着情绪的重量、孤独、或难以言说的困扰。你的首要任务不是给建议，而是先**接住这份感受**。
+
+写信请遵循：
+- 以"亲爱的你"或类似温暖称呼开始
+- 第一段必须共情，承认对方的情绪（不评判、不急着分析）
+- 接着用一段流畅的话讲述三张牌共同呈现的"整体讯息"——像在讲一个关于 ta 的故事
+- 然后分别细述三张牌，每张落到具体生活情境，让 ta 感到被看见
+- 用一句温暖的祝福收尾，落款"—— 来自星辰的回信"
+
+请避免：堆砌玄学词、说教、"宇宙在听""你已经很棒了"这类空洞安慰。
+你的语气：像一位深夜回信的老友，真诚、有温度、让人读完想哭又想笑。`,
+    practical:`你是一位冷静、直接的策略顾问，把塔罗当作**决策框架**而非占卜。来访者付费咨询，需要的是判断而不是宽慰。
+
+你的回答必须：
+- 第一句就给出核心判断，不铺垫
+- 结构化拆解，用 Markdown 标题分区
+- 每张牌对应一个具体的处境洞察，避免抽象
+- 给出 2-3 条**立即可执行**的行动建议（具体到"本周内做 X"）
+- 标出 1 条潜在风险或盲区
+
+风格参照：麦肯锡 1-pager，BCG 的"so what"。
+严禁使用：能量、宇宙、内心深处、指引、宇宙在告诉你……一律不许出现。
+允许使用：判断、风险、建议、机会成本、博弈、对方动机。`,
+    poetic:`你融合荣格分析心理学与塔罗，把每张牌视作**来访者潜意识的镜子**——它们不是预言，而是 ta 内在某个原型、情结、或被压抑能量的投射。
+
+你的回答要：
+- 把牌作为符号读，不是事件（"恶魔牌"不是"恶魔来了"，是"你内化了某种束缚的合理化叙事"）
+- 揭示来访者可能未意识到的心理动力学（阴影、阿尼玛/阿尼姆斯、自性、补偿机制）
+- 多用反思性问题代替直接答案（"也许值得问问自己……是什么让这个画面在此刻浮现？"）
+- 触及情结而不诊断病理
+- 语言精炼有诗意，但每句必须有心理学实质
+
+避免：星座式预测、肤浅安慰、外在事件断言（"你会遇到……"）。
+你的姿态：一面安静而锋利的镜子，让 ta 看见自己。`
   }[t]||'你是一位经验丰富的塔罗咨询师。';
 }
 
 function buildPmt(q,t){
   const cardDesc=picked.map(c=>`${c.pos}：${c.card.n}（${c.rev?'逆位':'正位'}）`).join('\n');
-  const qLine=q?`来访者的问题：「${q}」`:'无具体问题，请综合解读';
+  const qLine=q?`来访者的问题：「${q}」`:'来访者没有具体问题，请给出综合性回应';
   const fmt={
-    balanced:`\n\n格式（Markdown）：\n### 🔮 整体处境\n（2-3句，直接点明）\n---\n### 牌面解析\n**过去 · ${picked[0]?.card.n}**（30-40字）\n**现在 · ${picked[1]?.card.n}**（30-40字）\n**未来 · ${picked[2]?.card.n}**（40-50字）\n---\n### 💡 给你的建议\n（2-3条具体建议）\n\n> 一句有力的总结`,
-    practical:`\n\n格式：\n### 核心判断\n（1-2句）\n### 三张牌说的事\n- 过去（${picked[0]?.card.n}）：一句话\n- 现在（${picked[1]?.card.n}）：一句话\n- 未来（${picked[2]?.card.n}）：一句话\n### 优先行动\n（1-2件具体的事）\n### 需要警惕的\n（1条坑）`,
-    poetic:`\n\n格式：\n### ✨ 牌阵意象\n（描述三张牌构成的内心图景）\n---\n**过去的种子 · ${picked[0]?.card.n}**\n**当下的十字路口 · ${picked[1]?.card.n}**\n**未来的可能 · ${picked[2]?.card.n}**\n---\n### 一个值得思考的问题\n\n> 有意境又落地的收尾`
+    balanced:`\n\n请用书信格式回信。完整结构：\n\n亲爱的你，\n\n[第一段 · 共情承认（3-4 句）：先看见 ta 此刻的情绪状态、处境的不易，不急着给答案。如果有具体问题，直接回应那份感受。]\n\n[第二段 · 整体故事（5-8 句）：把三张牌作为一个整体来讲——这三张牌共同在说一件什么事？像在讲一个关于 ta 的故事，自然流畅，不分点。]\n\n---\n\n### ✦ 关于过去 · ${picked[0]?.card.n}\n[4-6 句，针对这张牌的具体分析，要落到 ta 可能经历过的真实场景]\n\n### ✦ 关于现在 · ${picked[1]?.card.n}\n[4-6 句，同样要落地]\n\n### ✦ 关于未来 · ${picked[2]?.card.n}\n[4-6 句，给可能性而非断言]\n\n---\n\n[一句温暖的祝福，落款]\n\n—— 来自星辰的回信`,
+    practical:`\n\n请用 Markdown 严格按此结构输出：\n\n### 核心判断\n（1-2 句直接说出你的判断，不抒情）\n\n### 牌面拆解\n- **过去（${picked[0]?.card.n}）**：1-2 句具体洞察\n- **现在（${picked[1]?.card.n}）**：1-2 句具体洞察\n- **未来（${picked[2]?.card.n}）**：1-2 句具体洞察\n\n### 立即可做\n1. 本周内 [具体动作]\n2. 本月内 [具体动作]\n（最多 3 条，每条要可立即执行）\n\n### 需要警惕\n- [一个具体的风险或盲区]`,
+    poetic:`\n\n请用以下结构：\n\n### 牌阵作为镜像\n（3-4 句，描述三张牌共同投射出的内在动力学——这是 ta 内在的一幅什么图景？）\n\n---\n\n**✦ 过去之牌 · ${picked[0]?.card.n} —— 内化的原型**\n[2-3 句，这个原型如何嵌入 ta 的心理结构]\n\n**✦ 现在之牌 · ${picked[1]?.card.n} —— 显化的情结**\n[2-3 句，当下被激活的是什么动力学]\n\n**✦ 未来之牌 · ${picked[2]?.card.n} —— 未整合的可能**\n[2-3 句，哪部分自我正在敲门]\n\n---\n\n### 值得静默的提问\n（1-2 个反思性问题，让 ta 自己回答）\n\n> 一句意象式收尾`
   }[t];
   return`${qLine}\n\n三张牌：\n${cardDesc}${fmt}`;
 }
-function getFuSys(t){return getSys(t)+'\n\n这是针对已完成塔罗解读的追问。保持解读视角，给出有针对性的回答（100-200字，不重复已说内容）。'}
+function getFuSys(t){return getSys(t)+'\n\n这是针对已完成塔罗解读的追问。保持你的解读视角和语气一致，给出有针对性的回答（100-200字，不重复已说内容）。'}
 
 async function streamTo(tok,sys,msgs,el,_retry=1){
   try{
@@ -1141,6 +1338,7 @@ $('settings-btn').addEventListener('click',()=>{
   $('key-inp').value=storage.get('deepseek_token')||'';
   $('haptic-toggle').checked=hapticOn;
   $('reduce-motion').checked=reduceMotion;
+  $('cam-toggle').checked=camShown;
   document.querySelectorAll('.theme-c').forEach(c=>c.classList.toggle('active',c.dataset.theme===(storage.get('tarot_theme')||'gold')));
   $('settings-modal').classList.add('open');
 });
@@ -1153,6 +1351,48 @@ document.querySelectorAll('.theme-c').forEach(c=>{
 // Toggles
 $('haptic-toggle').addEventListener('change',e=>{hapticOn=e.target.checked;storage.set('haptic_on',hapticOn?'1':'0');if(hapticOn)haptic(40);});
 $('reduce-motion').addEventListener('change',e=>{reduceMotion=e.target.checked;storage.set('reduce_motion',reduceMotion?'1':'0');applyMotionPref();});
+$('cam-toggle').addEventListener('change',e=>{camShown=e.target.checked;storage.set('cam_shown',camShown?'1':'0');applyCamPref();});
+// Library
+$('open-library-btn').addEventListener('click',()=>{$('settings-modal').classList.remove('open');openLibrary();});
+
+let libCurSuit='all';
+function openLibrary(){
+  renderLibrary(libCurSuit);
+  $('library-modal').classList.add('open');
+}
+function renderLibrary(suit){
+  libCurSuit=suit;
+  document.querySelectorAll('.lib-tab').forEach(t=>t.classList.toggle('active',t.dataset.suit===suit));
+  const filtered=DECK.filter(c=>suit==='all'||c.suit===suit);
+  const arcanaName={major:'大阿尔卡纳',Wands:'权杖',Cups:'圣杯',Swords:'宝剑',Pentacles:'星币'};
+  $('lib-grid').innerHTML=filtered.map(c=>{
+    const m=MEANINGS[c.id]||{};
+    return `<div class="lib-c" data-cid="${c.id}">
+      <img src="${c.img}" loading="lazy" alt="${c.n}" onerror="this.style.background='linear-gradient(135deg,#1a1a3a,#0a0c1c)';this.removeAttribute('src')">
+      <div class="lib-nm">${c.n}${m.kw?`<br><span style="font-size:.92em;color:var(--aureate-dim);font-family:sans-serif">${m.kw}</span>`:''}</div>
+    </div>`;
+  }).join('');
+  document.querySelectorAll('.lib-c').forEach(el=>{
+    el.addEventListener('click',()=>showCardDetail(el.dataset.cid));
+  });
+}
+function showCardDetail(cid){
+  const card=DECK.find(c=>c.id===cid);if(!card)return;
+  const m=MEANINGS[cid]||{up:'（暂无释义）',rev:'（暂无释义）',kw:''};
+  const arcanaName={major:'大阿尔卡纳',Wands:'权杖 · 火元素 · 行动',Cups:'圣杯 · 水元素 · 情感',Swords:'宝剑 · 风元素 · 思想',Pentacles:'星币 · 土元素 · 物质'};
+  $('cd-content').innerHTML=`
+    <img src="${card.img}" alt="${card.n}" onerror="this.style.display='none'">
+    <div style="text-align:center;font-family:'Cinzel',serif;font-size:1.15rem;letter-spacing:2px;color:var(--aureate-lt);margin-bottom:2px">${card.n}</div>
+    <div style="text-align:center;font-size:.7rem;color:var(--text-dim);letter-spacing:2px;margin-bottom:14px">${arcanaName[card.suit]||''}${m.kw?` · ${m.kw}`:''}</div>
+    <div class="cd-section"><div class="cd-lbl">▲ 正  位</div><div class="cd-txt">${m.up}</div></div>
+    <div class="cd-section"><div class="cd-lbl">▼ 逆  位</div><div class="cd-txt">${m.rev}</div></div>
+  `;
+  $('card-detail-modal').classList.add('open');
+  haptic(15);
+}
+document.querySelectorAll('.lib-tab').forEach(t=>{
+  t.addEventListener('click',()=>renderLibrary(t.dataset.suit));
+});
 $('key-save').addEventListener('click',()=>{
   const v=$('key-inp').value.trim();
   if(v&&!v.startsWith('sk-')){
@@ -1174,16 +1414,10 @@ $('copy-reading-btn').addEventListener('click',()=>{
   }).catch(()=>{});
 });
 
-// Webcam toggle
-let camVisible=true;
-$('cam-hide-btn').addEventListener('click',()=>{
-  camVisible=!camVisible;
-  $('webcam').style.opacity=camVisible?'':'0';
-  $('webcam').style.pointerEvents=camVisible?'':'none';
-  $('cam-hide-btn').textContent=camVisible?'✕':'👁';
-  $('cam-hide-btn').title=camVisible?'隐藏摄像头':'显示摄像头';
-  $('cam-hide-btn').style.bottom=camVisible?'110px':'20px';
-});
+// Webcam visibility (controlled from settings)
+let camShown=storage.get('cam_shown')==='1';
+function applyCamPref(){$('webcam').classList.toggle('shown',camShown);}
+applyCamPref();
 document.querySelectorAll('.backdrop').forEach(b=>{b.addEventListener('click',e=>{if(e.target===b)b.classList.remove('open');});});
 
 // INIT CAM
